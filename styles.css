@@ -29,7 +29,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
+    gap: 15px;
 }
 
 .header-controls {
@@ -41,37 +41,35 @@ body {
 
 header {
     background-color: white;
-    padding: 15px 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
+    padding: 12px 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 15px;
 }
 
 h1 {
     color: var(--primary-color);
     margin: 0;
-    font-size: 1.8em;
+    font-size: 1.6em;
     white-space: nowrap;
 }
 
 .region-selector {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     white-space: nowrap;
 }
 
-.last-updated {
-    color: #666;
-    font-size: 1em;
-    white-space: nowrap;
+.region-selector label {
+    font-size: 0.9em;
 }
 
 select {
-    padding: 8px 12px;
+    padding: 6px 10px;
     border: 1px solid var(--border-color);
     border-radius: 5px;
-    font-size: 16px;
+    font-size: 0.9em;
     background-color: white;
     cursor: pointer;
     transition: border-color 0.3s ease;
@@ -83,10 +81,10 @@ select:hover {
 
 .price-display {
     background-color: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 15px;
 }
 
 .current-price {
@@ -127,7 +125,7 @@ select:hover {
 }
 
 .main-price h2 {
-    font-size: 1.2em;
+    font-size: 1.1em;
     margin-bottom: 5px;
 }
 
@@ -179,13 +177,13 @@ select:hover {
 .header-title {
     display: flex;
     align-items: baseline;
-    gap: 15px;
+    gap: 10px;
 }
 
 .unit-label {
-    font-size: 1em;
+    font-size: 0.9em;
     color: #666;
-    margin-top: 5px;
+    margin-top: 2px;
 }
 
 #last-updated {
@@ -202,7 +200,7 @@ select:hover {
     margin-top: 5px;
     font-size: 0.85em;
     padding-top: 8px;
-    border-top: 1px solid rgba(0,0,0,0.05);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .legend-item {
@@ -254,7 +252,7 @@ select:hover {
     padding: 15px;
     background-color: white;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .stat-label {
@@ -271,14 +269,21 @@ select:hover {
 }
 
 .price-table-column {
-    min-width: 0; /* Prevents table overflow */
+    min-width: 0;
+    /* Prevents table overflow */
 }
 
 .price-table {
     background-color: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 15px;
+}
+
+.price-table h2 {
+    font-size: 1.1em;
+    margin-bottom: 10px;
 }
 
 table {
@@ -286,7 +291,8 @@ table {
     border-collapse: collapse;
 }
 
-th, td {
+th,
+td {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
@@ -343,87 +349,12 @@ footer a:hover {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .container {
-        padding: 10px;
-    }
-    
-    .chart-container {
-        height: 300px;
-    }
-    
-    .price-grid {
-        flex-direction: column;
-        gap: 10px;
+    0% {
+        transform: rotate(0deg);
     }
 
-    .main-price {
-        width: 100%;
-        padding: 10px;
-    }
-
-    .upcoming-prices {
-        padding-bottom: 5px;
-    }
-
-    .upcoming-price {
-        min-width: 75px;
-        padding: 8px;
-    }
-
-    .price-value {
-        font-size: 1.1em;
-    }
-
-    #current-price-value {
-        font-size: 1.8em;
-    }
-
-    .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    
-    .price-tables-container {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    
-    th, td {
-        padding: 8px;
-        font-size: 0.9em;
-    }
-
-    .header-content {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-    }
-
-    .header-controls {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-        width: 100%;
-    }
-
-    .region-selector {
-        width: 100%;
-    }
-
-    select {
-        flex: 1;
-    }
-
-    .header-title {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
+    100% {
+        transform: rotate(360deg);
     }
 }
 
@@ -493,4 +424,275 @@ footer a:hover {
 .next-day .hour-label {
     color: var(--secondary-color);
     font-weight: 500;
-} 
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    /* Header Styles */
+    header {
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .header-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .header-title {
+        flex-direction: row;
+        align-items: baseline;
+        gap: 8px;
+    }
+
+    h1 {
+        font-size: 1.4em;
+    }
+
+    .unit-label {
+        font-size: 0.85em;
+    }
+
+    .region-selector {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .region-selector select {
+        flex: 1;
+        max-width: 200px;
+        min-height: 36px;
+    }
+
+    /* Price Display */
+    .price-display {
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+
+    .main-price {
+        padding: 8px;
+    }
+
+    #current-price-value {
+        font-size: 1.6em;
+    }
+
+    /* Statistics */
+    .price-statistics {
+        padding: 12px;
+        margin: 10px 0;
+    }
+
+    .stats-grid {
+        gap: 10px;
+    }
+
+    .stat-item {
+        padding: 10px;
+    }
+
+    /* Tables */
+    .price-table {
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+
+    .price-table h2 {
+        font-size: 1em;
+        margin-bottom: 8px;
+    }
+
+    .price-tables-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .price-table-column {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        width: 100%;
+        min-width: unset;
+    }
+
+    th,
+    td {
+        padding: 8px;
+        font-size: 0.9em;
+    }
+}
+
+/* Small Phone Optimization */
+@media screen and (max-width: 380px) {
+    .container {
+        padding: 8px;
+    }
+
+    header {
+        padding: 8px;
+        margin-bottom: 8px;
+    }
+
+    .header-content {
+        gap: 8px;
+    }
+
+    h1 {
+        font-size: 1.2em;
+    }
+
+    .unit-label {
+        font-size: 0.8em;
+    }
+
+    .region-selector label {
+        font-size: 0.85em;
+    }
+
+    .region-selector select {
+        min-height: 34px;
+        font-size: 0.85em;
+    }
+
+    .price-display {
+        padding: 10px;
+        margin-bottom: 8px;
+    }
+
+    .main-price {
+        padding: 6px;
+    }
+
+    .main-price h2 {
+        font-size: 0.95em;
+    }
+
+    #current-price-value {
+        font-size: 1.4em;
+    }
+
+    .price-statistics {
+        padding: 8px;
+        margin: 8px 0;
+    }
+
+    .stats-grid {
+        gap: 8px;
+    }
+
+    .stat-item {
+        padding: 8px;
+    }
+
+    .stat-label {
+        font-size: 0.8em;
+    }
+
+    .chart-container {
+        margin: 10px -5px;
+    }
+
+    .price-table {
+        padding: 10px;
+        margin-bottom: 8px;
+    }
+
+    .price-table h2 {
+        font-size: 0.95em;
+        margin-bottom: 6px;
+    }
+
+    .price-tables-container {
+        gap: 8px;
+    }
+
+    th,
+    td {
+        padding: 4px;
+        font-size: 0.8em;
+    }
+
+    .price-legend {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .legend-color {
+        width: 8px;
+        height: 8px;
+    }
+}
+
+/* iPhone SE (1st gen) and other very small screens */
+@media screen and (max-width: 320px) {
+    .container {
+        padding: 4px;
+    }
+
+    .upcoming-prices {
+        grid-auto-columns: 68px;
+        /* Adjusted for better fit */
+        gap: 4px;
+    }
+
+    .upcoming-price {
+        width: 100%;
+        padding: 4px 2px;
+    }
+
+    .price-value {
+        font-size: 0.85em;
+    }
+
+    .hour-label {
+        font-size: 0.7em;
+    }
+
+    #current-price-value {
+        font-size: 1.3em;
+    }
+
+    .main-price h2 {
+        font-size: 0.9em;
+    }
+
+    .chart-container {
+        height: 180px;
+    }
+}
+
+/* Touch and Scrolling Optimizations */
+@supports (-webkit-touch-callout: none) {
+
+    .upcoming-prices,
+    .price-table-column {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Touch Targets */
+select,
+button,
+.upcoming-price,
+.region-selector select {
+    min-height: 44px;
+}

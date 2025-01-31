@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="sv">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -32,7 +34,7 @@
                 </div>
             </div>
         </header>
-        
+
         <main>
             <div class="price-display">
                 <div class="current-price">
@@ -67,10 +69,6 @@
                                 <div class="price-value">Laddar...</div>
                                 <div class="hour-label"></div>
                             </div>
-                            <div class="upcoming-price" id="upcoming-7">
-                                <div class="price-value">Laddar...</div>
-                                <div class="hour-label"></div>
-                            </div>
                         </div>
                     </div>
                     <div class="price-legend">
@@ -92,7 +90,7 @@
                 <div class="chart-container">
                     <canvas id="priceChart"></canvas>
                 </div>
-                
+
                 <!-- Moved Statistics Section -->
                 <div class="price-statistics">
                     <h3>Dagens statistik</h3>
@@ -112,7 +110,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="price-table">
                 <h2>Dagens priser</h2>
                 <div class="price-tables-container">
@@ -145,11 +143,12 @@
                 </div>
             </div>
         </main>
-        
+
         <footer>
             <p>Data från <a href="https://www.elprisetjustnu.se" target="_blank">elprisetjustnu.se</a></p>
         </footer>
     </div>
     <script src="script.js"></script>
 </body>
-</html> 
+
+</html>
