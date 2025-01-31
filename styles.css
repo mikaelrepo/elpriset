@@ -1,0 +1,496 @@
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --background-color: #f5f6fa;
+    --text-color: #2c3e50;
+    --border-color: #dcdde1;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+header {
+    background-color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+h1 {
+    color: var(--primary-color);
+    margin: 0;
+    font-size: 1.8em;
+    white-space: nowrap;
+}
+
+.region-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+}
+
+.last-updated {
+    color: #666;
+    font-size: 1em;
+    white-space: nowrap;
+}
+
+select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: white;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+select:hover {
+    border-color: var(--secondary-color);
+}
+
+.price-display {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.current-price {
+    text-align: center;
+    margin-bottom: 15px;
+    padding: 15px;
+    background-color: var(--background-color);
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.price-low {
+    background-color: rgba(46, 204, 113, 0.1);
+}
+
+.price-medium {
+    background-color: rgba(241, 196, 15, 0.1);
+}
+
+.price-high {
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+.price-grid {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.main-price {
+    flex: 0 0 auto;
+    padding: 12px 15px;
+    background-color: var(--background-color);
+    border-radius: 8px;
+    text-align: center;
+    min-width: 180px;
+}
+
+.main-price h2 {
+    font-size: 1.2em;
+    margin-bottom: 5px;
+}
+
+#current-price-value {
+    font-size: 2em;
+    font-weight: bold;
+    margin: 5px 0;
+    transition: color 0.3s ease;
+}
+
+.upcoming-prices {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+    overflow-x: auto;
+    padding: 3px;
+}
+
+.upcoming-price {
+    flex: 1;
+    min-width: 85px;
+    padding: 10px;
+    background-color: var(--background-color);
+    border-radius: 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.price-value {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 3px;
+}
+
+.hour-label {
+    font-size: 0.85em;
+    color: #666;
+    transition: color 0.3s ease;
+}
+
+.current-hour-label {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 3px;
+}
+
+.header-title {
+    display: flex;
+    align-items: baseline;
+    gap: 15px;
+}
+
+.unit-label {
+    font-size: 1em;
+    color: #666;
+    margin-top: 5px;
+}
+
+#last-updated {
+    font-size: 1em;
+    color: #666;
+    margin-top: 10px;
+    white-space: nowrap;
+}
+
+.price-legend {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 5px;
+    font-size: 0.85em;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.legend-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.legend-low {
+    background-color: #27ae60;
+}
+
+.legend-medium {
+    background-color: #f39c12;
+}
+
+.legend-high {
+    background-color: #c0392b;
+}
+
+.chart-container {
+    height: 400px;
+    margin-bottom: 20px;
+}
+
+/* Statistics Styles */
+.price-statistics {
+    margin: 20px 0;
+    padding: 20px;
+    background-color: var(--background-color);
+    border-radius: 8px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.stat-label {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.price-tables-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.price-table-column {
+    min-width: 0; /* Prevents table overflow */
+}
+
+.price-table {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+th {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+tr:hover {
+    background-color: #f1f2f6;
+}
+
+footer {
+    text-align: center;
+    margin-top: 20px;
+    padding: 20px;
+    color: #666;
+}
+
+footer a {
+    color: var(--secondary-color);
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+.loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.loading-spinner {
+    display: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--background-color);
+    border-top: 2px solid var(--secondary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+.loading .loading-spinner {
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .chart-container {
+        height: 300px;
+    }
+    
+    .price-grid {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .main-price {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .upcoming-prices {
+        padding-bottom: 5px;
+    }
+
+    .upcoming-price {
+        min-width: 75px;
+        padding: 8px;
+    }
+
+    .price-value {
+        font-size: 1.1em;
+    }
+
+    #current-price-value {
+        font-size: 1.8em;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .price-tables-container {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    th, td {
+        padding: 8px;
+        font-size: 0.9em;
+    }
+
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .header-controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        width: 100%;
+    }
+
+    .region-selector {
+        width: 100%;
+    }
+
+    select {
+        flex: 1;
+    }
+
+    .header-title {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+}
+
+/* Price level colors for upcoming prices */
+.upcoming-price.price-low {
+    background-color: rgba(46, 204, 113, 0.1);
+}
+
+.upcoming-price.price-low .price-value {
+    color: #27ae60;
+}
+
+.upcoming-price.price-medium {
+    background-color: rgba(241, 196, 15, 0.1);
+}
+
+.upcoming-price.price-medium .price-value {
+    color: #f39c12;
+}
+
+.upcoming-price.price-high {
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+.upcoming-price.price-high .price-value {
+    color: #c0392b;
+}
+
+.current-price.price-low #current-price-value {
+    color: #27ae60;
+}
+
+.current-price.price-medium #current-price-value {
+    color: #f39c12;
+}
+
+.current-price.price-high #current-price-value {
+    color: #c0392b;
+}
+
+/* Update main price background to match the color scheme */
+.current-price.price-low .main-price {
+    background-color: rgba(46, 204, 113, 0.1);
+}
+
+.current-price.price-medium .main-price {
+    background-color: rgba(241, 196, 15, 0.1);
+}
+
+.current-price.price-high .main-price {
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+/* Remove the old background colors from the container */
+.current-price.price-low {
+    background-color: transparent;
+}
+
+.current-price.price-medium {
+    background-color: transparent;
+}
+
+.current-price.price-high {
+    background-color: transparent;
+}
+
+.next-day .hour-label {
+    color: var(--secondary-color);
+    font-weight: 500;
+} 

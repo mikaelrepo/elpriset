@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elpris Sverige</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="header-title">
+                    <h1>Elpris Sverige</h1>
+                    <div class="unit-label">Alla priser i öre/kWh</div>
+                </div>
+                <div class="header-controls">
+                    <div class="region-selector">
+                        <label for="region">Välj elområde:</label>
+                        <select id="region">
+                            <option value="SE1">SE1 - Luleå</option>
+                            <option value="SE2">SE2 - Sundsvall</option>
+                            <option value="SE3" selected>SE3 - Stockholm</option>
+                            <option value="SE4">SE4 - Malmö</option>
+                        </select>
+                        <span class="loading-spinner"></span>
+                    </div>
+                    <div class="last-updated">
+                        Senast uppdaterad: <span id="last-updated">Laddar...</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <main>
+            <div class="price-display">
+                <div class="current-price">
+                    <div class="price-grid">
+                        <div class="main-price">
+                            <h2>Aktuellt pris</h2>
+                            <div id="current-price-value">Laddar...</div>
+                            <div class="current-hour-label">Nu</div>
+                        </div>
+                        <div class="upcoming-prices">
+                            <div class="upcoming-price" id="upcoming-1">
+                                <div class="price-value">Laddar...</div>
+                                <div class="hour-label"></div>
+                            </div>
+                            <div class="upcoming-price" id="upcoming-2">
+                                <div class="price-value">Laddar...</div>
+                                <div class="hour-label"></div>
+                            </div>
+                            <div class="upcoming-price" id="upcoming-3">
+                                <div class="price-value">Laddar...</div>
+                                <div class="hour-label"></div>
+                            </div>
+                            <div class="upcoming-price" id="upcoming-4">
+                                <div class="price-value">Laddar...</div>
+                                <div class="hour-label"></div>
+                            </div>
+                            <div class="upcoming-price" id="upcoming-5">
+                                <div class="price-value">Laddar...</div>
+                                <div class="hour-label"></div>
+                            </div>
+                            <div class="upcoming-price" id="upcoming-6">
+                                <div class="price-value">Laddar...</div>
+                                <div class="hour-label"></div>
+                            </div>
+                            <div class="upcoming-price" id="upcoming-7">
+                                <div class="price-value">Laddar...</div>
+                                <div class="hour-label"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="price-legend">
+                        <div class="legend-item">
+                            <div class="legend-color legend-low"></div>
+                            <span>Lågt pris</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color legend-medium"></div>
+                            <span>Medel pris</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color legend-high"></div>
+                            <span>Högt pris</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+                
+                <!-- Moved Statistics Section -->
+                <div class="price-statistics">
+                    <h3>Dagens statistik</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Lägsta</div>
+                            <div id="min-price">Laddar...</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Medel</div>
+                            <div id="avg-price">Laddar...</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Högsta</div>
+                            <div id="max-price">Laddar...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="price-table">
+                <h2>Dagens priser</h2>
+                <div class="price-tables-container">
+                    <div class="price-table-column">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tid</th>
+                                    <th>Pris (öre/kWh)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="price-table-body-1">
+                                <!-- First half of data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="price-table-column">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tid</th>
+                                    <th>Pris (öre/kWh)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="price-table-body-2">
+                                <!-- Second half of data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Data från <a href="https://www.elprisetjustnu.se" target="_blank">elprisetjustnu.se</a></p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
