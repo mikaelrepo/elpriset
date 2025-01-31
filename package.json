@@ -1,0 +1,11 @@
+{
+    "name": "elpris-sverige",
+    "version": "1.0.0",
+    "description": "Electricity price tracker for Sweden",
+    "scripts": {
+        "generate-icons": "node generate-icons.js"
+    },
+    "dependencies": {
+        "sharp": "^0.32.6"
+    }
+}
