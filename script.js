@@ -38,7 +38,8 @@ const elements = {
     lowestPrice: document.getElementById('lowestPrice'),
     averagePrice: document.getElementById('averagePrice'),
     highestPrice: document.getElementById('highestPrice'),
-    hourlyPrices: document.getElementById('hourlyPrices')
+    hourlyPrices: document.getElementById('hourlyPrices'),
+    installButton: document.getElementById('installButton')
 };
 
 let chart = null;
@@ -342,6 +343,55 @@ async function updatePrices() {
 
 // Event Listeners
 elements.regionSelect.addEventListener('change', updatePrices);
+
+// PWA Installation handling
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent Chrome 67 and earlier from automatically showing the prompt
+    e.preventDefault();
+    // Stash the event so it can be triggered later
+    deferredPrompt = e;
+    // Show the install button
+    elements.installButton.classList.remove('hidden');
+});
+
+elements.installButton.addEventListener('click', async () => {
+    if (!deferredPrompt) {
+        return;
+    }
+    // Show the install prompt
+    deferredPrompt.prompt();
+    // Wait for the user to respond to the prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to the install prompt: ${outcome}`);
+    // Clear the deferredPrompt variable
+    deferredPrompt = null;
+    // Hide the install button
+    elements.installButton.classList.add('hidden');
+});
+
+window.addEventListener('appinstalled', () => {
+    // Clear the deferredPrompt variable
+    deferredPrompt = null;
+    // Hide the install button
+    elements.installButton.classList.add('hidden');
+    // Optionally, show a thank you message or perform other actions
+    console.log('PWA was installed');
+});
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('ServiceWorker registration successful');
+            })
+            .catch(err => {
+                console.error('ServiceWorker registration failed: ', err);
+            });
+    });
+}
 
 // Initial load and periodic updates
 async function initialize() {
