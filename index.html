@@ -1,193 +1,76 @@
 <!DOCTYPE html>
 <html lang="sv">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Kolla aktuella elpriser i Sverige - uppdateras varje timme">
-    <meta name="theme-color" content="#2c3e50" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#2c3e50" media="(prefers-color-scheme: dark)">
     <title>Elpris Sverige</title>
-
-    <!-- PWA meta tags -->
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="Elpris">
-    <meta name="application-name" content="Elpris Sverige">
-
-    <!-- Favicons -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="48x48" href="/icons/favicon-48x48.png">
-
-    <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png">
-    <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-152x152.png">
-
-    <!-- PWA manifest and stylesheets -->
-    <link rel="manifest" href="/manifest.json">
-    <link rel="stylesheet" href="/styles.css">
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
     <div class="container">
         <header>
             <div class="header-content">
-                <div class="header-title">
-                    <h1>Elpris Sverige</h1>
-                    <div class="unit-label">Alla priser i öre/kWh</div>
-                </div>
-                <div class="header-controls">
-                    <div class="region-selector">
-                        <label for="region">Välj elområde:</label>
-                        <select id="region">
-                            <option value="SE1">SE1 - Luleå</option>
-                            <option value="SE2">SE2 - Sundsvall</option>
-                            <option value="SE3" selected>SE3 - Stockholm</option>
-                            <option value="SE4">SE4 - Malmö</option>
-                        </select>
-                        <span class="loading-spinner"></span>
-                    </div>
+                <h1>Elpris Sverige</h1>
+                <div class="header-right">
+                    <select id="regionSelect">
+                        <option value="SE1">SE1</option>
+                        <option value="SE2">SE2</option>
+                        <option value="SE3" selected>SE3</option>
+                        <option value="SE4">SE4</option>
+                    </select>
                     <div class="last-updated">
-                        Senast uppdaterad: <span id="last-updated">Laddar...</span>
+                        Senast uppdaterad: <span id="lastUpdated">--:--</span>
                     </div>
                 </div>
             </div>
+            <div class="unit-info">Alla priser i öre/kWh</div>
         </header>
 
         <main>
-            <div class="price-display">
-                <div class="current-price">
-                    <div class="price-grid">
-                        <div class="main-price">
-                            <div id="current-price-value">Laddar...</div>
-                            <div class="current-hour-label"><strong>Nu</strong></div>
-                        </div>
-                        <div class="upcoming-prices">
-                            <div class="upcoming-price" id="upcoming-1">
-                                <div class="price-value">Laddar...</div>
-                                <div class="hour-label"></div>
-                            </div>
-                            <div class="upcoming-price" id="upcoming-2">
-                                <div class="price-value">Laddar...</div>
-                                <div class="hour-label"></div>
-                            </div>
-                            <div class="upcoming-price" id="upcoming-3">
-                                <div class="price-value">Laddar...</div>
-                                <div class="hour-label"></div>
-                            </div>
-                            <div class="upcoming-price" id="upcoming-4">
-                                <div class="price-value">Laddar...</div>
-                                <div class="hour-label"></div>
-                            </div>
-                            <div class="upcoming-price" id="upcoming-5">
-                                <div class="price-value">Laddar...</div>
-                                <div class="hour-label"></div>
-                            </div>
-                            <div class="upcoming-price" id="upcoming-6">
-                                <div class="price-value">Laddar...</div>
-                                <div class="hour-label"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="price-legend">
-                        <div class="legend-item">
-                            <div class="legend-color legend-low"></div>
-                            <span>Lågt pris</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color legend-medium"></div>
-                            <span>Medel pris</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color legend-high"></div>
-                            <span>Högt pris</span>
-                        </div>
-                    </div>
+            <div class="next-hours">
+                <div id="hourlyPrices" class="hourly-prices">
+                    <!-- Price boxes will be added here dynamically -->
                 </div>
+            </div>
+            <div class="chart-container">
+                <div id="loadingMessage" class="message">Laddar...</div>
+                <div id="errorMessage" class="message error hidden">Fel vid laddning av data</div>
+                <canvas id="priceChart"></canvas>
+            </div>
 
-                <div class="chart-container">
-                    <canvas id="priceChart"></canvas>
+            <div class="price-legend">
+                <div class="legend-item">
+                    <span class="dot low"></span>
+                    <span>Lågt pris</span>
                 </div>
-
-                <!-- Moved Statistics Section -->
-                <div class="price-statistics">
-                    <h3>Dagens statistik</h3>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-label">Lägsta</div>
-                            <div id="min-price">Laddar...</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Medel</div>
-                            <div id="avg-price">Laddar...</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Högsta</div>
-                            <div id="max-price">Laddar...</div>
-                        </div>
-                    </div>
+                <div class="legend-item">
+                    <span class="dot medium"></span>
+                    <span>Medel pris</span>
+                </div>
+                <div class="legend-item">
+                    <span class="dot high"></span>
+                    <span>Högt pris</span>
                 </div>
             </div>
 
-            <div class="price-table">
-                <h2>Dagens priser</h2>
-                <div class="price-tables-container">
-                    <div class="price-table-column">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Tid</th>
-                                    <th>Pris (öre/kWh)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="price-table-body-1">
-                                <!-- First half of data will be populated here -->
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="price-table-column">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Tid</th>
-                                    <th>Pris (öre/kWh)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="price-table-body-2">
-                                <!-- Second half of data will be populated here -->
-                            </tbody>
-                        </table>
-                    </div>
+            <div class="statistics">
+                <div class="stat-box">
+                    <h3>Lägsta</h3>
+                    <p id="lowestPrice">-- öre</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Medel</h3>
+                    <p id="averagePrice">-- öre</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Högsta</h3>
+                    <p id="highestPrice">-- öre</p>
                 </div>
             </div>
         </main>
-
-        <footer>
-            <p>Data från <a href="https://www.elprisetjustnu.se" target="_blank">elprisetjustnu.se</a></p>
-        </footer>
     </div>
-    <script src="/script.js"></script>
-    <script>
-        // Register Service Worker with error handling
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', async () => {
-                try {
-                    const registration = await navigator.serviceWorker.register('/sw.js');
-                    console.log('ServiceWorker registration successful with scope:', registration.scope);
-                } catch (err) {
-                    console.error('ServiceWorker registration failed:', err);
-                }
-            });
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
-
-</html>
+</html> 
