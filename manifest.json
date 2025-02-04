@@ -1,13 +1,16 @@
 {
-    "name": "Elpris Sverige",
-    "short_name": "Elpris",
+    "name": "Elpriser Sverige",
+    "short_name": "Elpriser",
     "description": "Real-time electricity prices for Sweden's regions",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#f5f6fa",
     "theme_color": "#2c3e50",
     "orientation": "portrait",
-    "categories": ["utilities", "finance"],
+    "categories": [
+        "utilities",
+        "finance"
+    ],
     "lang": "sv",
     "dir": "ltr",
     "prefer_related_applications": false,
@@ -67,4 +70,4 @@
             "purpose": "any maskable"
         }
     ]
-} 
+}

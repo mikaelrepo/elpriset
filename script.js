@@ -103,7 +103,7 @@ async function checkApiAccessibility() {
     const today = new Date();
     const formattedDate = formatDateForApi(today);
     const url = `${API_BASE_URL}/${formattedDate}_SE3.json`;
-    
+
     try {
         const response = await fetch(url, {
             method: 'GET',
@@ -157,34 +157,33 @@ async function fetchPrices(region = 'SE3') {
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    
+
     const formattedToday = formatDateForApi(today);
-    const url = `${API_BASE_URL}/${formattedToday}_${region}.json`;
-    
+    const formattedTomorrow = formatDateForApi(tomorrow);
+
+    const todayUrl = `${API_BASE_URL}/${formattedToday}_${region}.json`;
+    const tomorrowUrl = `${API_BASE_URL}/${formattedTomorrow}_${region}.json`;
+
     try {
-        const data = await tryFetchWithProxies(url);
-        if (!Array.isArray(data) || data.length === 0) {
+        // Fetch today's data
+        const todayData = await tryFetchWithProxies(todayUrl);
+        if (!Array.isArray(todayData) || todayData.length === 0) {
             throw new Error('Ogiltig dataformat: Förväntade icke-tom array');
         }
 
-        // Check if we need tomorrow's data
-        const currentHour = today.getHours();
-        if (currentHour >= 23) {
-            // Try to fetch tomorrow's data
-            const formattedTomorrow = formatDateForApi(tomorrow);
-            const tomorrowUrl = `${API_BASE_URL}/${formattedTomorrow}_${region}.json`;
-            try {
-                const tomorrowData = await tryFetchWithProxies(tomorrowUrl);
-                if (Array.isArray(tomorrowData) && tomorrowData.length > 0) {
-                    // Combine today's and tomorrow's data
-                    return [...data, ...tomorrowData];
-                }
-            } catch (error) {
-                console.log('Could not fetch tomorrow\'s data:', error);
+        // Always try to fetch tomorrow's data
+        let tomorrowData = [];
+        try {
+            tomorrowData = await tryFetchWithProxies(tomorrowUrl);
+            if (!Array.isArray(tomorrowData)) {
+                tomorrowData = [];
             }
+        } catch (error) {
+            console.log('Could not fetch tomorrow\'s data:', error);
         }
 
-        return data;
+        // Combine today's and tomorrow's data
+        return [...todayData, ...tomorrowData];
     } catch (error) {
         console.error('Fetch error:', error);
         throw error;
@@ -229,41 +228,40 @@ function processData(data) {
     // Get current time
     const now = new Date();
     const currentHour = now.getHours();
+    const currentMinutes = now.getMinutes();
 
-    // Filter and sort data to start from current hour
+    // Filter data to get prices from current hour onwards
     const filteredData = data.filter(item => {
         const itemTime = new Date(item.time_start);
-        return itemTime.getHours() >= currentHour;
+        // Include the price if it's a future hour, or if it's the current hour
+        if (itemTime.getHours() > currentHour) {
+            return true;
+        }
+        if (itemTime.getHours() === currentHour && currentMinutes < 59) {
+            return true;
+        }
+        return false;
     });
 
-    // If we filtered out all today's remaining hours, we need tomorrow's data
-    if (filteredData.length === 0) {
-        console.log('No more prices for today, should fetch tomorrow\'s data');
-        return processAllData(data);
+    // Sort the filtered data by time
+    const sortedData = filteredData.sort((a, b) =>
+        new Date(a.time_start) - new Date(b.time_start)
+    );
+
+    // Take only the next 8 hours
+    const nextEightHours = sortedData.slice(0, 8);
+
+    // If we don't have enough hours, try to get more from tomorrow
+    if (nextEightHours.length < 8) {
+        console.log('Not enough future prices available');
     }
 
-    // Update hourly price boxes
-    updateHourlyPrices(filteredData, currentHour);
+    // Update hourly price boxes with the next 8 hours
+    updateHourlyPrices(nextEightHours);
 
-    const prices = filteredData.map(item => parseFloat((item.SEK_per_kWh * 100).toFixed(2)));
-    const times = filteredData.map(item => formatTime(item.time_start));
-    
-    const stats = {
-        lowest: Math.min(...prices),
-        highest: Math.max(...prices),
-        average: (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2)
-    };
+    const prices = nextEightHours.map(item => parseFloat((item.SEK_per_kWh * 100).toFixed(2)));
+    const times = nextEightHours.map(item => formatTime(item.time_start));
 
-    const colors = prices.map(price => getColorForPrice(price, stats.lowest, stats.highest));
-
-    return { prices, times, stats, colors };
-}
-
-// Helper function to process all data when needed
-function processAllData(data) {
-    const prices = data.map(item => parseFloat((item.SEK_per_kWh * 100).toFixed(2)));
-    const times = data.map(item => formatTime(item.time_start));
-    
     const stats = {
         lowest: Math.min(...prices),
         highest: Math.max(...prices),
@@ -311,13 +309,13 @@ async function updatePrices() {
     try {
         const region = elements.regionSelect.value;
         const data = await fetchPrices(region);
-        
+
         if (!Array.isArray(data) || data.length === 0) {
             throw new Error('Ogiltig dataformat: Förväntade icke-tom array');
         }
-        
+
         const { prices, times, stats, colors } = processData(data);
-        
+
         updateChart(times, prices, colors);
         updateStatistics(stats);
         updateLastUpdated();
@@ -325,7 +323,7 @@ async function updatePrices() {
     } catch (error) {
         console.error('Error updating prices:', error);
         let errorMessage = 'Fel vid laddning av data: ';
-        
+
         if (error.message.includes('Failed to fetch')) {
             errorMessage += 'Kunde inte ansluta till servern. Kontrollera din internetanslutning.';
         } else if (error.message.includes('Invalid JSON')) {
@@ -335,7 +333,7 @@ async function updatePrices() {
         } else {
             errorMessage += error.message;
         }
-        
+
         elements.errorMessage.textContent = errorMessage;
         showError();
     }
@@ -401,7 +399,7 @@ async function initialize() {
         showError();
         return;
     }
-    
+
     updatePrices();
     setInterval(updatePrices, UPDATE_INTERVAL);
 }
