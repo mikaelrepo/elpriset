@@ -40,6 +40,7 @@ pids
 
 # Replit specific
 .replit
+replit.nix
 .upm/
 .config/
 .cache/
@@ -74,6 +75,10 @@ Thumbs.db
 *.local.json
 *.local.js
 *.local.config
+config.local.js
+config.private.js
+credentials.json
+auth.json
 
 # Source maps
 *.map
@@ -89,4 +94,32 @@ Thumbs.db
 *.sublime-workspace
 *.sublime-project
 .project
-.classpath 
+.classpath
+
+# SSL/TLS Certificates
+*.pem
+*.key
+*.crt
+*.cer
+*.der
+*.priv
+
+# Logs and databases
+*.sqlite
+*.sqlite3
+*.db
+logs/
+*.log.*
+
+# Dependency directories
+jspm_packages/
+bower_components/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history 
