@@ -225,23 +225,10 @@ function updateHourlyPrices(data, currentHour) {
 }
 
 function processData(data) {
-    // Get current time
     const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinutes = now.getMinutes();
 
-    // Filter data to get prices from current hour onwards
-    const filteredData = data.filter(item => {
-        const itemTime = new Date(item.time_start);
-        // Include the price if it's a future hour, or if it's the current hour
-        if (itemTime.getHours() > currentHour) {
-            return true;
-        }
-        if (itemTime.getHours() === currentHour && currentMinutes < 59) {
-            return true;
-        }
-        return false;
-    });
+    // Filter data to include only items whose start time is in the future
+    const filteredData = data.filter(item => new Date(item.time_start) >= now);
 
     // Sort the filtered data by time
     const sortedData = filteredData.sort((a, b) =>
@@ -251,12 +238,7 @@ function processData(data) {
     // Take only the next 8 hours
     const nextEightHours = sortedData.slice(0, 8);
 
-    // If we don't have enough hours, try to get more from tomorrow
-    if (nextEightHours.length < 8) {
-        console.log('Not enough future prices available');
-    }
-
-    // Update hourly price boxes with the next 8 hours
+    // Update the hourly prices display
     updateHourlyPrices(nextEightHours);
 
     const prices = nextEightHours.map(item => parseFloat((item.SEK_per_kWh * 100).toFixed(2)));
