@@ -5,6 +5,7 @@ const FALLBACK_PROXIES = [
     'https://api.allorigins.win/raw?url=',
     'https://corsproxy.io/?'
 ];
+const CACHE_DURATION = 3600000; // 1 hour in milliseconds
 const CHART_OPTIONS = {
     responsive: true,
     maintainAspectRatio: false,
@@ -28,6 +29,9 @@ const CHART_OPTIONS = {
     }
 };
 
+// Add constant for when to start preparing for midnight transition
+const MIDNIGHT_PREP_HOUR = 22; // Start preparing for midnight transition at 22:00
+
 // DOM Elements
 const elements = {
     regionSelect: document.getElementById('regionSelect'),
@@ -43,6 +47,83 @@ const elements = {
 };
 
 let chart = null;
+
+// Enhanced cache system
+const dataCache = {
+    timestamps: new Map(),
+    prices: new Map(),
+    lastUpdate: null,
+    region: null,
+    clear() {
+        this.timestamps.clear();
+        this.prices.clear();
+        this.lastUpdate = null;
+        cacheStats.lastCleared = new Date();
+    }
+};
+
+// Cache monitoring
+const cacheStats = {
+    hits: 0,
+    misses: 0,
+    lastCleared: null,
+    log() {
+        const hitRate = this.hits + this.misses === 0 ? 0 :
+            (this.hits / (this.hits + this.misses) * 100).toFixed(2);
+        console.info('Cache stats:', {
+            hitRate: hitRate + '%',
+            hits: this.hits,
+            misses: this.misses,
+            totalRequests: this.hits + this.misses,
+            timeSinceCleared: this.lastCleared ? 
+                `${Math.round((new Date() - this.lastCleared) / 1000)}s` : 
+                'never'
+        });
+    }
+};
+
+// Utility functions for cache management
+function getCachedValue(map, key, generator) {
+    let value = map.get(key);
+    if (value !== undefined) {
+        cacheStats.hits++;
+        return value;
+    }
+    cacheStats.misses++;
+    value = generator();
+    map.set(key, value);
+    return value;
+}
+
+function shouldInvalidateCache(currentRegion) {
+    const now = new Date().getTime();
+    return (
+        !dataCache.lastUpdate ||
+        (now - dataCache.lastUpdate > CACHE_DURATION) ||
+        dataCache.region !== currentRegion
+    );
+}
+
+// Memoized price category function
+const memoizedGetPriceCategory = (() => {
+    const cache = new Map();
+    return (price, minPrice, maxPrice) => {
+        const key = `${price}-${minPrice}-${maxPrice}`;
+        return getCachedValue(cache, key, () => getPriceCategory(price, minPrice, maxPrice));
+    };
+})();
+
+// Data validation
+function validatePriceData(data) {
+    if (!Array.isArray(data) || data.length === 0) {
+        return false;
+    }
+    return data.every(item => (
+        item.time_start && 
+        typeof item.SEK_per_kWh === 'number' &&
+        !isNaN(item.SEK_per_kWh)
+    ));
+}
 
 // Helper Functions
 function formatTime(isoString) {
@@ -154,7 +235,8 @@ async function tryFetchWithProxies(url) {
 
 // Data Fetching and Processing
 async function fetchPrices(region = 'SE3') {
-    const today = new Date();
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
@@ -165,25 +247,31 @@ async function fetchPrices(region = 'SE3') {
     const tomorrowUrl = `${API_BASE_URL}/${formattedTomorrow}_${region}.json`;
 
     try {
-        // Fetch today's data
-        const todayData = await tryFetchWithProxies(todayUrl);
-        if (!Array.isArray(todayData) || todayData.length === 0) {
-            throw new Error('Ogiltig dataformat: Förväntade icke-tom array');
+        // Always fetch both today's and tomorrow's data
+        const [todayData, tomorrowData] = await Promise.allSettled([
+            tryFetchWithProxies(todayUrl),
+            tryFetchWithProxies(tomorrowUrl)
+        ]);
+
+        let combinedData = [];
+
+        if (todayData.status === 'fulfilled' && Array.isArray(todayData.value)) {
+            combinedData = [...todayData.value];
+        } else {
+            console.error('Could not fetch today\'s data:', todayData.reason);
         }
 
-        // Always try to fetch tomorrow's data
-        let tomorrowData = [];
-        try {
-            tomorrowData = await tryFetchWithProxies(tomorrowUrl);
-            if (!Array.isArray(tomorrowData)) {
-                tomorrowData = [];
-            }
-        } catch (error) {
-            console.log('Could not fetch tomorrow\'s data:', error);
+        if (tomorrowData.status === 'fulfilled' && Array.isArray(tomorrowData.value)) {
+            combinedData = [...combinedData, ...tomorrowData.value];
+        } else {
+            console.warn('Could not fetch tomorrow\'s data:', tomorrowData.reason);
         }
 
-        // Combine today's and tomorrow's data
-        return [...todayData, ...tomorrowData];
+        if (combinedData.length === 0) {
+            throw new Error('Kunde inte hämta prisdata för varken idag eller imorgon');
+        }
+
+        return combinedData;
     } catch (error) {
         console.error('Fetch error:', error);
         throw error;
@@ -200,17 +288,28 @@ function getPriceCategory(price, minPrice, maxPrice) {
     return 'high';
 }
 
-function updateHourlyPrices(data, currentHour) {
+function updateHourlyPrices(data) {
     const hourlyPricesContainer = elements.hourlyPrices;
     hourlyPricesContainer.innerHTML = ''; // Clear existing boxes
 
+    if (!Array.isArray(data) || data.length === 0) {
+        const emptyBox = document.createElement('div');
+        emptyBox.className = 'price-box no-data';
+        emptyBox.innerHTML = '<div class="message">No price data available</div>';
+        hourlyPricesContainer.appendChild(emptyBox);
+        return;
+    }
+
+    // Use cached prices
+    const prices = data.map(item => item.parsedPrice || parseFloat((item.SEK_per_kWh * 100).toFixed(2)));
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+
     // Get the next 8 hours of prices
     const nextHours = data.slice(0, 8);
-    const minPrice = Math.min(...data.map(item => parseFloat((item.SEK_per_kWh * 100).toFixed(2))));
-    const maxPrice = Math.max(...data.map(item => parseFloat((item.SEK_per_kWh * 100).toFixed(2))));
 
-    nextHours.forEach(hourData => {
-        const price = parseFloat((hourData.SEK_per_kWh * 100).toFixed(2));
+    nextHours.forEach((hourData, index) => {
+        const price = prices[index];
         const time = formatTime(hourData.time_start);
         const category = getPriceCategory(price, minPrice, maxPrice);
 
@@ -225,32 +324,176 @@ function updateHourlyPrices(data, currentHour) {
 }
 
 function processData(data) {
+    if (!validatePriceData(data)) {
+        console.error('Invalid or empty price data received');
+        return processHourlyData([]);
+    }
+
     const now = new Date();
+    const currentHourStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
+    const currentTimestamp = currentHourStart.getTime();
+    const nextHourTimestamp = new Date(currentHourStart).setHours(currentHourStart.getHours() + 1);
 
-    // Filter data to include only items whose start time is in the future
-    const filteredData = data.filter(item => new Date(item.time_start) >= now);
+    const region = elements.regionSelect.value;
+    if (shouldInvalidateCache(region)) {
+        console.info('Invalidating cache due to:', {
+            region: dataCache.region !== region,
+            time: dataCache.lastUpdate ? 'cache expired' : 'no previous cache'
+        });
+        dataCache.clear();
+        dataCache.region = region;
+    }
 
-    // Sort the filtered data by time
-    const sortedData = filteredData.sort((a, b) =>
-        new Date(a.time_start) - new Date(b.time_start)
+    // Pre-process and cache data
+    const processedData = data.map(item => {
+        const timeKey = item.time_start;
+        const timestamp = getCachedValue(
+            dataCache.timestamps,
+            timeKey,
+            () => new Date(timeKey).getTime()
+        );
+        const price = getCachedValue(
+            dataCache.prices,
+            timeKey,
+            () => {
+                const p = parseFloat((item.SEK_per_kWh * 100).toFixed(2));
+                return isNaN(p) ? 0 : p;
+            }
+        );
+
+        return {
+            ...item,
+            timestamp,
+            parsedPrice: price
+        };
+    });
+
+    dataCache.lastUpdate = now.getTime();
+
+    // Sort using cached timestamps
+    const sortedData = processedData.sort((a, b) => a.timestamp - b.timestamp);
+
+    // Enhanced midnight transition handling
+    const currentHour = now.getHours();
+    const isNearMidnight = currentHour >= MIDNIGHT_PREP_HOUR;
+    const currentDayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const tomorrowStart = currentDayStart + 86400000; // Add 24 hours
+
+    // Validate tomorrow's data availability when near midnight
+    if (isNearMidnight) {
+        const tomorrowHours = sortedData.filter(item => item.timestamp >= tomorrowStart);
+        if (tomorrowHours.length === 0) {
+            console.warn('No tomorrow\'s data available near midnight');
+        } else {
+            console.info(`Found ${tomorrowHours.length} hours of tomorrow's data`);
+        }
+    }
+
+    // Find current hour using cached timestamp
+    const currentIndex = sortedData.findIndex(item => item.timestamp === currentTimestamp);
+
+    if (currentIndex >= 0) {
+        console.info('Using current hour prices');
+        let nextEightHours = sortedData.slice(currentIndex, currentIndex + 8);
+        
+        // Enhanced midnight transition handling
+        if (isNearMidnight) {
+            // Calculate how many hours we need from tomorrow
+            const hoursUntilMidnight = 24 - currentHour;
+            const neededTomorrowHours = 8 - hoursUntilMidnight;
+            
+            if (neededTomorrowHours > 0) {
+                const tomorrowHours = sortedData.filter(item => item.timestamp >= tomorrowStart);
+                if (tomorrowHours.length > 0) {
+                    // Replace or append tomorrow's hours as needed
+                    if (nextEightHours.length < 8) {
+                        // Append missing hours
+                        const remainingHours = 8 - nextEightHours.length;
+                        nextEightHours.push(...tomorrowHours.slice(0, remainingHours));
+                    } else {
+                        // Replace last hours with tomorrow's first hours
+                        nextEightHours = [
+                            ...nextEightHours.slice(0, hoursUntilMidnight),
+                            ...tomorrowHours.slice(0, neededTomorrowHours)
+                        ];
+                    }
+                    console.info(`Added ${neededTomorrowHours} hours from tomorrow to complete 8-hour window`);
+                }
+            }
+        }
+        
+        if (nextEightHours.length < 8) {
+            console.warn(`Could only get ${nextEightHours.length} hours of price data`);
+        }
+        
+        preloadNextHourData(currentHourStart);
+        return processHourlyData(nextEightHours);
+    }
+
+    // Look for next available hour, including tomorrow's hours
+    const nextIndex = sortedData.findIndex(item => 
+        item.timestamp >= nextHourTimestamp
     );
 
-    // Take only the next 8 hours
-    const nextEightHours = sortedData.slice(0, 8);
+    if (nextIndex >= 0) {
+        console.info('Using next available future hour prices');
+        const nextEightHours = sortedData.slice(nextIndex, nextIndex + 8);
+        return processHourlyData(nextEightHours);
+    }
 
-    // Update the hourly prices display
-    updateHourlyPrices(nextEightHours);
+    // If no future hours, find the most recent past hour
+    const lastIndex = sortedData.findIndex(item => 
+        item.timestamp < currentTimestamp
+    );
 
-    const prices = nextEightHours.map(item => parseFloat((item.SEK_per_kWh * 100).toFixed(2)));
-    const times = nextEightHours.map(item => formatTime(item.time_start));
+    if (lastIndex >= 0) {
+        console.info('Using most recent past hour due to no future data available');
+        const nextEightHours = sortedData.slice(lastIndex, lastIndex + 8);
+        return processHourlyData(nextEightHours);
+    }
 
+    console.warn('No valid price data found for any time period');
+    return processHourlyData([]);
+}
+
+function processHourlyData(hours) {
+    // Validate cache integrity
+    const hasValidCache = hours.every(item => 
+        typeof item.parsedPrice === 'number' && 
+        typeof item.timestamp === 'number'
+    );
+
+    if (!hasValidCache) {
+        console.error('Cache integrity check failed');
+        dataCache.clear();
+        return {
+            prices: [],
+            times: [],
+            stats: { lowest: 0, highest: 0, average: '0.00' },
+            colors: []
+        };
+    }
+
+    if (hours.length < 8) {
+        console.warn(`Limited price data: only ${hours.length} hours available`);
+    }
+
+    const prices = hours.map(item => item.parsedPrice);
+    
     const stats = {
         lowest: Math.min(...prices),
         highest: Math.max(...prices),
         average: (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2)
     };
 
-    const colors = prices.map(price => getColorForPrice(price, stats.lowest, stats.highest));
+    const colors = prices.map(price => 
+        memoizedGetPriceCategory(price, stats.lowest, stats.highest)
+    );
+
+    const times = hours.map(item => formatTime(item.time_start));
+
+    updateHourlyPrices(hours);
+    cacheStats.log();
 
     return { prices, times, stats, colors };
 }
@@ -384,6 +627,14 @@ async function initialize() {
 
     updatePrices();
     setInterval(updatePrices, UPDATE_INTERVAL);
+}
+
+// Preload next hour's data
+function preloadNextHourData(currentHour) {
+    const nextHour = new Date(currentHour);
+    nextHour.setHours(currentHour.getHours() + 1);
+    // Log preloading attempt
+    console.info('Preloading data for next hour:', formatTime(nextHour));
 }
 
 initialize(); 
