@@ -6,24 +6,265 @@ const FALLBACK_PROXIES = [
     'https://corsproxy.io/?'
 ];
 const CACHE_DURATION = 3600000; // 1 hour in milliseconds
+const THEME_KEY = 'preferred-theme';
+
+// Theme management
+async function saveThemePreference(theme) {
+    // Primary storage: localStorage
+    try {
+        localStorage.setItem(THEME_KEY, theme);
+    } catch (e) {
+        console.warn('Could not save theme to localStorage:', e);
+    }
+    
+    // Backup storage: cookie
+    try {
+        setCookie(THEME_KEY, theme);
+    } catch (e) {
+        console.warn('Could not save theme to cookie:', e);
+    }
+
+    // PWA Service Worker storage
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        try {
+            const messageChannel = new MessageChannel();
+            const swResponse = new Promise((resolve) => {
+                messageChannel.port1.onmessage = (event) => {
+                    resolve(event.data.success);
+                };
+            });
+            
+            navigator.serviceWorker.controller.postMessage(
+                {
+                    type: 'SET_THEME',
+                    theme: theme
+                },
+                [messageChannel.port2]
+            );
+            
+            await swResponse;
+        } catch (e) {
+            console.warn('Could not save theme to Service Worker cache:', e);
+        }
+    }
+}
+
+async function getThemePreference() {
+    // Try localStorage first
+    const themeFromLocal = localStorage.getItem(THEME_KEY);
+    if (themeFromLocal && ['light', 'dark'].includes(themeFromLocal)) {
+        return themeFromLocal;
+    }
+    
+    // Try cookie as backup
+    const themeFromCookie = getCookie(THEME_KEY);
+    if (themeFromCookie && ['light', 'dark'].includes(themeFromCookie)) {
+        return themeFromCookie;
+    }
+
+    // Try PWA Service Worker cache as final backup
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        try {
+            const cache = await caches.open('elpris-preferences-v1');
+            const response = await cache.match('preferences');
+            if (response) {
+                const preferences = await response.json();
+                if (preferences.theme && ['light', 'dark'].includes(preferences.theme)) {
+                    return preferences.theme;
+                }
+            }
+        } catch (e) {
+            console.warn('Could not read theme from Service Worker cache:', e);
+        }
+    }
+    
+    // If no stored preference, return null to use system preference
+    return null;
+}
+
+// Function to update theme
+async function updateTheme(isDark) {
+    const theme = isDark ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    await saveThemePreference(theme);
+    
+    // Update theme toggle button
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.innerHTML = isDark ? '☀️' : '🌙';
+        themeToggle.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    }
+    
+    // Update chart if it exists
+    if (chart) {
+        updatePrices();
+    }
+}
+
+// Function to check if dark mode is enabled
+async function isDarkMode() {
+    const storedTheme = await getThemePreference();
+    if (storedTheme) {
+        return storedTheme === 'dark';
+    }
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+// Initialize theme
+async function initializeTheme() {
+    const isDark = await isDarkMode();
+    await updateTheme(isDark);
+}
+
+// Create and add theme toggle button
+function createThemeToggle() {
+    const headerRight = document.querySelector('.header-right');
+    const themeToggle = document.createElement('button');
+    themeToggle.id = 'themeToggle';
+    themeToggle.className = 'theme-toggle';
+    themeToggle.setAttribute('aria-label', 'Toggle theme');
+    
+    isDarkMode().then(isDark => {
+        themeToggle.innerHTML = isDark ? '☀️' : '🌙';
+        themeToggle.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    });
+    
+    themeToggle.addEventListener('click', async () => {
+        const newTheme = !(await isDarkMode());
+        await updateTheme(newTheme);
+    });
+    
+    // Insert before the install button if it exists
+    const installButton = headerRight.querySelector('.install-button');
+    if (installButton) {
+        headerRight.insertBefore(themeToggle, installButton);
+    } else {
+        headerRight.appendChild(themeToggle);
+    }
+}
+
+// Add theme change listener
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async (e) => {
+    const storedTheme = await getThemePreference();
+    if (!storedTheme) {
+        // Only update based on system preference if user hasn't manually set a theme
+        await updateTheme(e.matches);
+    }
+});
+
+// Function to get chart colors based on theme
+function getChartColors() {
+    return {
+        text: isDarkMode() ? '#ecf0f1' : '#666',
+        grid: isDarkMode() ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+        line: isDarkMode() ? '#3498db' : '#3498db',
+        gradientStart: isDarkMode() ? 'rgba(52, 152, 219, 0.2)' : 'rgba(52, 152, 219, 0.3)',
+        gradientEnd: isDarkMode() ? 'rgba(52, 152, 219, 0)' : 'rgba(52, 152, 219, 0)',
+        tooltipBackground: isDarkMode() ? 'rgba(44, 62, 80, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+        tooltipText: isDarkMode() ? '#ecf0f1' : '#2c3e50'
+    };
+}
+
+// Update CHART_OPTIONS with theme-aware colors
 const CHART_OPTIONS = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+        intersect: false,
+        mode: 'nearest',
+        axis: 'x'
+    },
     plugins: {
         legend: {
             display: false
+        },
+        tooltip: {
+            enabled: true,
+            backgroundColor: getChartColors().tooltipBackground,
+            titleColor: getChartColors().tooltipText,
+            bodyColor: getChartColors().tooltipText,
+            borderColor: isDarkMode() ? '#34495e' : '#e1e1e1',
+            borderWidth: 1,
+            padding: {
+                top: 10,
+                right: 12,
+                bottom: 10,
+                left: 12
+            },
+            displayColors: false,
+            callbacks: {
+                label: function(context) {
+                    return `${context.parsed.y.toFixed(2)} öre/kWh`;
+                }
+            },
+            position: 'nearest',
+            caretSize: 6,
+            caretPadding: 10,
+            titleFont: {
+                size: 14,
+                weight: 'bold'
+            },
+            bodyFont: {
+                size: 14
+            }
         }
     },
     scales: {
         x: {
             grid: {
                 display: false
+            },
+            ticks: {
+                maxRotation: 0,
+                color: getChartColors().text,
+                font: {
+                    size: 11,
+                    weight: '500'
+                },
+                maxTicksLimit: 8,
+                callback: function(value, index, values) {
+                    if (window.innerWidth < 768) {
+                        return index % 2 === 0 ? this.getLabelForValue(value) : '';
+                    }
+                    return this.getLabelForValue(value);
+                }
             }
         },
         y: {
             beginAtZero: true,
+            grid: {
+                color: getChartColors().grid,
+                drawBorder: false
+            },
             ticks: {
-                callback: value => `${value} öre`
+                callback: value => `${value} öre`,
+                color: getChartColors().text,
+                font: {
+                    size: 11,
+                    weight: '500'
+                },
+                maxTicksLimit: 6
+            }
+        }
+    },
+    elements: {
+        line: {
+            tension: 0.4,
+            borderWidth: 2,
+            borderColor: getChartColors().line
+        },
+        point: {
+            radius: (context) => {
+                return window.innerWidth < 768 ? 2 : 3;
+            },
+            backgroundColor: isDarkMode() ? '#2c3e50' : '#fff',
+            borderWidth: (context) => {
+                return window.innerWidth < 768 ? 1.5 : 2;
+            },
+            borderColor: getChartColors().line,
+            hitRadius: 12,
+            hoverRadius: (context) => {
+                return window.innerWidth < 768 ? 4 : 5;
             }
         }
     }
@@ -421,7 +662,7 @@ function processData(data) {
                     // Handle 16-hour view for chart
                     if (nextSixteenHours.length < 16) {
                         const remainingHours = 16 - nextSixteenHours.length;
-                        nextSixteenHours.push(...tomorrowHours.slice(0, remainingHours));
+                        nextSixteenHours.push(...tomorrowHours.slice(0, neededTomorrowHoursChart));
                     } else {
                         nextSixteenHours = [
                             ...nextSixteenHours.slice(0, hoursUntilMidnight),
@@ -518,26 +759,86 @@ function processHourlyData(hours, chartHours = hours) {
 }
 
 function updateChart(times, prices, colors) {
+    const ctx = elements.priceChart.getContext('2d');
+    
     if (chart) {
         chart.destroy();
     }
 
-    const ctx = elements.priceChart.getContext('2d');
+    const chartColors = getChartColors();
+    const gradient = ctx.createLinearGradient(0, 0, 0, elements.priceChart.height);
+    gradient.addColorStop(0, chartColors.gradientStart);
+    gradient.addColorStop(1, chartColors.gradientEnd);
+
+    // Calculate price ranges for zones
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const range = maxPrice - minPrice;
+
+    // Adjust data points for mobile
+    const isMobile = window.innerWidth < 768;
+    const displayTimes = isMobile ? times.filter((_, i) => i % 2 === 0) : times;
+    const displayPrices = isMobile ? prices.filter((_, i) => i % 2 === 0) : prices;
+    const displayColors = isMobile ? colors.filter((_, i) => i % 2 === 0) : colors;
+
     chart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: times,
+            labels: displayTimes,
             datasets: [{
-                data: prices,
-                borderColor: '#2c3e50',
-                backgroundColor: 'rgba(44, 62, 80, 0.1)',
-                pointBackgroundColor: colors,
-                pointRadius: 6,
-                pointHoverRadius: 8,
-                tension: 0.3
+                label: 'Pris',
+                data: displayPrices,
+                backgroundColor: gradient,
+                borderColor: chartColors.line,
+                pointBackgroundColor: displayColors,
+                pointBorderColor: displayColors,
+                fill: true,
+                tension: 0.4
             }]
         },
-        options: CHART_OPTIONS
+        options: {
+            ...CHART_OPTIONS,
+            plugins: {
+                ...CHART_OPTIONS.plugins,
+                priceZones: {
+                    beforeDraw(chart) {
+                        const ctx = chart.ctx;
+                        const yAxis = chart.scales.y;
+                        const chartArea = chart.chartArea;
+                        
+                        // Zone colors with adjusted opacity for dark mode
+                        const zoneOpacity = isDarkMode() ? 0.15 : 0.1;
+                        
+                        // Low price zone (green)
+                        ctx.fillStyle = `rgba(46, 204, 113, ${zoneOpacity})`;
+                        ctx.fillRect(
+                            chartArea.left,
+                            yAxis.getPixelForValue(minPrice + range * 0.66),
+                            chartArea.right - chartArea.left,
+                            yAxis.getPixelForValue(minPrice) - yAxis.getPixelForValue(minPrice + range * 0.66)
+                        );
+                        
+                        // Medium price zone (yellow)
+                        ctx.fillStyle = `rgba(241, 196, 15, ${zoneOpacity})`;
+                        ctx.fillRect(
+                            chartArea.left,
+                            yAxis.getPixelForValue(minPrice + range * 0.33),
+                            chartArea.right - chartArea.left,
+                            yAxis.getPixelForValue(minPrice + range * 0.66) - yAxis.getPixelForValue(minPrice + range * 0.33)
+                        );
+                        
+                        // High price zone (red)
+                        ctx.fillStyle = `rgba(231, 76, 60, ${zoneOpacity})`;
+                        ctx.fillRect(
+                            chartArea.left,
+                            yAxis.getPixelForValue(maxPrice),
+                            chartArea.right - chartArea.left,
+                            yAxis.getPixelForValue(minPrice + range * 0.33) - yAxis.getPixelForValue(maxPrice)
+                        );
+                    }
+                }
+            }
+        }
     });
 }
 
@@ -592,38 +893,88 @@ elements.regionSelect.addEventListener('change', (e) => {
 
 // PWA Installation handling
 let deferredPrompt;
+const PWA_INSTALLED_KEY = 'pwa_installed';
 
+// Check if PWA is already installed
+function isPWAInstalled() {
+    // Check if app is in standalone mode (installed)
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        return true;
+    }
+    // Check if previously installed
+    return localStorage.getItem(PWA_INSTALLED_KEY) === 'true';
+}
+
+// Handle PWA installation
 window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent Chrome 67 and earlier from automatically showing the prompt
+    // Prevent the mini-infobar from appearing on mobile
     e.preventDefault();
     // Stash the event so it can be triggered later
     deferredPrompt = e;
-    // Show the install button
-    elements.installButton.classList.remove('hidden');
+    
+    // Only show install button if PWA is not already installed
+    if (!isPWAInstalled()) {
+        elements.installButton.classList.remove('hidden');
+        // Update button text
+        elements.installButton.textContent = 'Installera App';
+    }
 });
 
+// Update install button handler
 elements.installButton.addEventListener('click', async () => {
     if (!deferredPrompt) {
+        console.log('Installation prompt not available');
         return;
     }
-    // Show the install prompt
-    deferredPrompt.prompt();
-    // Wait for the user to respond to the prompt
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response to the install prompt: ${outcome}`);
-    // Clear the deferredPrompt variable
-    deferredPrompt = null;
-    // Hide the install button
-    elements.installButton.classList.add('hidden');
+
+    try {
+        // Show the installation prompt
+        const result = await deferredPrompt.prompt();
+        console.log('Install prompt result:', result);
+        
+        // Wait for the user to respond to the prompt
+        const choiceResult = await deferredPrompt.userChoice;
+        if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the install prompt');
+            localStorage.setItem(PWA_INSTALLED_KEY, 'true');
+            elements.installButton.classList.add('hidden');
+        } else {
+            console.log('User dismissed the install prompt');
+        }
+    } catch (error) {
+        console.error('Error showing install prompt:', error);
+    } finally {
+        // Clear the deferredPrompt as it can't be used again
+        deferredPrompt = null;
+    }
 });
 
-window.addEventListener('appinstalled', () => {
-    // Clear the deferredPrompt variable
-    deferredPrompt = null;
-    // Hide the install button
-    elements.installButton.classList.add('hidden');
-    // Optionally, show a thank you message or perform other actions
+// Handle successful installation
+window.addEventListener('appinstalled', (event) => {
     console.log('PWA was installed');
+    localStorage.setItem(PWA_INSTALLED_KEY, 'true');
+    elements.installButton.classList.add('hidden');
+    deferredPrompt = null;
+    
+    // Optionally show a success message
+    const successMessage = document.createElement('div');
+    successMessage.className = 'install-success-message';
+    successMessage.textContent = 'App installerad framgångsrikt!';
+    document.body.appendChild(successMessage);
+    
+    // Remove success message after 3 seconds
+    setTimeout(() => {
+        successMessage.remove();
+    }, 3000);
+});
+
+// Handle display mode changes
+window.matchMedia('(display-mode: standalone)').addEventListener('change', (evt) => {
+    if (evt.matches) {
+        // App is running in standalone mode (installed)
+        localStorage.setItem(PWA_INSTALLED_KEY, 'true');
+        elements.installButton.classList.add('hidden');
+    }
 });
 
 // Register Service Worker
@@ -641,6 +992,10 @@ if ('serviceWorker' in navigator) {
 
 // Initial load and periodic updates
 async function initialize() {
+    // Initialize theme
+    initializeTheme();
+    createThemeToggle();
+
     // Restore the selected region
     const savedRegion = await getRegionPreference();
     elements.regionSelect.value = savedRegion;
@@ -759,5 +1114,12 @@ async function getRegionPreference() {
     // Default to SE3 if no stored preference
     return 'SE3';
 }
+
+// Add resize handler for responsive updates
+window.addEventListener('resize', () => {
+    if (chart) {
+        chart.resize();
+    }
+});
 
 initialize(); 

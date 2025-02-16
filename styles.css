@@ -1,10 +1,58 @@
-:root {
+:root, :root[data-theme="light"] {
+    /* Light theme variables */
     --primary-color: #2c3e50;
     --low-price: #2ecc71;
     --medium-price: #f1c40f;
     --high-price: #e74c3c;
     --background-color: #f5f6fa;
     --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --text-color: #2c3e50;
+    --text-secondary: #666;
+    --surface-color: white;
+    --border-color: #e1e1e1;
+    --chart-grid-color: rgba(0, 0, 0, 0.05);
+    --tooltip-bg: rgba(255, 255, 255, 0.95);
+    --button-hover: #f0f0f0;
+}
+
+:root[data-theme="dark"] {
+    /* Dark theme variables */
+    --primary-color: #ecf0f1;
+    --background-color: #1a1a1a;
+    --text-color: #ecf0f1;
+    --text-secondary: #bdc3c7;
+    --surface-color: #2c3e50;
+    --border-color: #34495e;
+    --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --chart-grid-color: rgba(255, 255, 255, 0.05);
+    --tooltip-bg: rgba(44, 62, 80, 0.95);
+    --button-hover: #3d566e;
+    
+    /* Adjust price colors for better visibility in dark mode */
+    --low-price: #00d68f;
+    --medium-price: #ffd93d;
+    --high-price: #ff6b6b;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        /* Dark theme variables */
+        --primary-color: #ecf0f1;
+        --background-color: #1a1a1a;
+        --text-color: #ecf0f1;
+        --text-secondary: #bdc3c7;
+        --surface-color: #2c3e50;
+        --border-color: #34495e;
+        --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        --chart-grid-color: rgba(255, 255, 255, 0.05);
+        --tooltip-bg: rgba(44, 62, 80, 0.95);
+        --button-hover: #3d566e;
+        
+        /* Adjust price colors for better visibility in dark mode */
+        --low-price: #00d68f;
+        --medium-price: #ffd93d;
+        --high-price: #ff6b6b;
+    }
 }
 
 * {
@@ -16,7 +64,7 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background-color: var(--background-color);
-    color: var(--primary-color);
+    color: var(--text-color);
     line-height: 1.6;
 }
 
@@ -40,6 +88,7 @@ header {
 h1 {
     font-size: 2.5rem;
     font-weight: 700;
+    color: var(--text-color);
 }
 
 .header-right {
@@ -50,20 +99,21 @@ h1 {
 
 #regionSelect {
     padding: 8px 16px;
-    border: 2px solid var(--primary-color);
+    border: 2px solid var(--border-color);
     border-radius: 6px;
     font-size: 1rem;
-    background-color: white;
+    background-color: var(--surface-color);
+    color: var(--text-color);
     cursor: pointer;
 }
 
 .unit-info {
-    color: #666;
+    color: var(--text-secondary);
     font-size: 0.9rem;
 }
 
 .chart-container {
-    background: white;
+    background: var(--surface-color);
     padding: 20px;
     border-radius: 10px;
     box-shadow: var(--box-shadow);
@@ -78,7 +128,7 @@ h1 {
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 1.2rem;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .message.error {
@@ -97,7 +147,7 @@ h1 {
 }
 
 .stat-box {
-    background: white;
+    background: var(--surface-color);
     padding: 20px;
     border-radius: 10px;
     box-shadow: var(--box-shadow);
@@ -107,13 +157,13 @@ h1 {
 .stat-box h3 {
     font-size: 1.1rem;
     margin-bottom: 10px;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .stat-box p {
     font-size: 1.8rem;
     font-weight: 700;
-    color: var(--primary-color);
+    color: var(--text-color);
 }
 
 .next-hours {
@@ -128,7 +178,7 @@ h1 {
 }
 
 .price-box {
-    background: white;
+    background: var(--surface-color);
     border-radius: 8px;
     padding: 12px;
     text-align: center;
@@ -154,38 +204,69 @@ h1 {
 
 .price-box .time {
     font-size: 0.9rem;
-    color: #666;
+    color: var(--text-secondary);
     margin-bottom: 4px;
 }
 
 .price-box .price {
     font-size: 1.2rem;
     font-weight: 600;
-    color: var(--primary-color);
+    color: var(--text-color);
 }
 
 .install-button {
-    padding: 8px 16px;
     background-color: var(--low-price);
-    color: white;
+    color: var(--surface-color);
     border: none;
-    border-radius: 6px;
-    font-size: 1rem;
+    padding: 8px 16px;
+    border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.2s, transform 0.2s;
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
 
 .install-button:hover {
     background-color: #27ae60;
     transform: translateY(-1px);
-}
-
-.install-button:active {
-    transform: translateY(0);
+    box-shadow: var(--box-shadow);
 }
 
 .install-button.hidden {
     display: none;
+}
+
+.install-success-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--low-price);
+    color: var(--surface-color);
+    padding: 12px 24px;
+    border-radius: 4px;
+    box-shadow: var(--box-shadow);
+    z-index: 1000;
+    animation: slideDown 0.3s ease-out, fadeOut 0.3s ease-out 2.7s;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translate(-50%, -20px);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
 }
 
 @media (max-width: 768px) {
@@ -200,7 +281,14 @@ h1 {
     }
 
     .header-right {
-        flex-direction: column;
+        flex-direction: row;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    #regionSelect {
+        width: auto;
+        min-width: 80px;
     }
 
     .statistics {
@@ -226,7 +314,45 @@ h1 {
 }
 
 @media (max-width: 480px) {
+    .header-right {
+        flex-direction: row;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    #regionSelect {
+        width: auto;
+        min-width: 80px;
+        padding: 8px 12px;
+    }
+
     .hourly-prices {
         grid-template-columns: repeat(2, 1fr);
     }
+}
+
+/* Theme toggle button styles */
+.theme-toggle {
+    background-color: var(--surface-color);
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.theme-toggle:hover {
+    background-color: var(--button-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--box-shadow);
+}
+
+.theme-toggle:active {
+    transform: translateY(0);
 } 
