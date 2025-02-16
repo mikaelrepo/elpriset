@@ -326,7 +326,7 @@ function updateHourlyPrices(data) {
 function processData(data) {
     if (!validatePriceData(data)) {
         console.error('Invalid or empty price data received');
-        return processHourlyData([]);
+        return processHourlyData([], []);
     }
 
     const now = new Date();
@@ -395,39 +395,52 @@ function processData(data) {
     if (currentIndex >= 0) {
         console.info('Using current hour prices');
         let nextEightHours = sortedData.slice(currentIndex, currentIndex + 8);
+        let nextSixteenHours = sortedData.slice(currentIndex, currentIndex + 16);
         
         // Enhanced midnight transition handling
         if (isNearMidnight) {
             // Calculate how many hours we need from tomorrow
             const hoursUntilMidnight = 24 - currentHour;
             const neededTomorrowHours = 8 - hoursUntilMidnight;
+            const neededTomorrowHoursChart = 16 - hoursUntilMidnight;
             
             if (neededTomorrowHours > 0) {
                 const tomorrowHours = sortedData.filter(item => item.timestamp >= tomorrowStart);
                 if (tomorrowHours.length > 0) {
-                    // Replace or append tomorrow's hours as needed
+                    // Handle 8-hour view for price boxes
                     if (nextEightHours.length < 8) {
-                        // Append missing hours
                         const remainingHours = 8 - nextEightHours.length;
                         nextEightHours.push(...tomorrowHours.slice(0, remainingHours));
                     } else {
-                        // Replace last hours with tomorrow's first hours
                         nextEightHours = [
                             ...nextEightHours.slice(0, hoursUntilMidnight),
                             ...tomorrowHours.slice(0, neededTomorrowHours)
                         ];
                     }
-                    console.info(`Added ${neededTomorrowHours} hours from tomorrow to complete 8-hour window`);
+                    
+                    // Handle 16-hour view for chart
+                    if (nextSixteenHours.length < 16) {
+                        const remainingHours = 16 - nextSixteenHours.length;
+                        nextSixteenHours.push(...tomorrowHours.slice(0, remainingHours));
+                    } else {
+                        nextSixteenHours = [
+                            ...nextSixteenHours.slice(0, hoursUntilMidnight),
+                            ...tomorrowHours.slice(0, neededTomorrowHoursChart)
+                        ];
+                    }
                 }
             }
         }
         
         if (nextEightHours.length < 8) {
-            console.warn(`Could only get ${nextEightHours.length} hours of price data`);
+            console.warn(`Could only get ${nextEightHours.length} hours of price data for boxes`);
+        }
+        if (nextSixteenHours.length < 16) {
+            console.warn(`Could only get ${nextSixteenHours.length} hours of price data for chart`);
         }
         
         preloadNextHourData(currentHourStart);
-        return processHourlyData(nextEightHours);
+        return processHourlyData(nextEightHours, nextSixteenHours);
     }
 
     // Look for next available hour, including tomorrow's hours
@@ -438,7 +451,8 @@ function processData(data) {
     if (nextIndex >= 0) {
         console.info('Using next available future hour prices');
         const nextEightHours = sortedData.slice(nextIndex, nextIndex + 8);
-        return processHourlyData(nextEightHours);
+        const nextSixteenHours = sortedData.slice(nextIndex, nextIndex + 16);
+        return processHourlyData(nextEightHours, nextSixteenHours);
     }
 
     // If no future hours, find the most recent past hour
@@ -449,14 +463,15 @@ function processData(data) {
     if (lastIndex >= 0) {
         console.info('Using most recent past hour due to no future data available');
         const nextEightHours = sortedData.slice(lastIndex, lastIndex + 8);
-        return processHourlyData(nextEightHours);
+        const nextSixteenHours = sortedData.slice(lastIndex, lastIndex + 16);
+        return processHourlyData(nextEightHours, nextSixteenHours);
     }
 
     console.warn('No valid price data found for any time period');
-    return processHourlyData([]);
+    return processHourlyData([], []);
 }
 
-function processHourlyData(hours) {
+function processHourlyData(hours, chartHours = hours) {
     // Validate cache integrity
     const hasValidCache = hours.every(item => 
         typeof item.parsedPrice === 'number' && 
@@ -475,10 +490,14 @@ function processHourlyData(hours) {
     }
 
     if (hours.length < 8) {
-        console.warn(`Limited price data: only ${hours.length} hours available`);
+        console.warn(`Limited price data: only ${hours.length} hours available for boxes`);
+    }
+    if (chartHours.length < 16) {
+        console.warn(`Limited price data: only ${chartHours.length} hours available for chart`);
     }
 
-    const prices = hours.map(item => item.parsedPrice);
+    // Use chart hours for statistics to include all visible prices
+    const prices = chartHours.map(item => item.parsedPrice);
     
     const stats = {
         lowest: Math.min(...prices),
@@ -486,11 +505,11 @@ function processHourlyData(hours) {
         average: (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2)
     };
 
-    const colors = prices.map(price => 
+    const colors = chartHours.map(price => 
         memoizedGetPriceCategory(price, stats.lowest, stats.highest)
     );
 
-    const times = hours.map(item => formatTime(item.time_start));
+    const times = chartHours.map(item => formatTime(item.time_start));
 
     updateHourlyPrices(hours);
     cacheStats.log();
@@ -565,7 +584,11 @@ async function updatePrices() {
 }
 
 // Event Listeners
-elements.regionSelect.addEventListener('change', updatePrices);
+elements.regionSelect.addEventListener('change', (e) => {
+    const newRegion = e.target.value;
+    saveRegionPreference(newRegion);
+    updatePrices();
+});
 
 // PWA Installation handling
 let deferredPrompt;
@@ -618,6 +641,10 @@ if ('serviceWorker' in navigator) {
 
 // Initial load and periodic updates
 async function initialize() {
+    // Restore the selected region
+    const savedRegion = await getRegionPreference();
+    elements.regionSelect.value = savedRegion;
+
     const isApiAccessible = await checkApiAccessibility();
     if (!isApiAccessible) {
         elements.errorMessage.textContent = 'Kunde inte ansluta till API:et. Kontrollera din internetanslutning.';
@@ -635,6 +662,102 @@ function preloadNextHourData(currentHour) {
     nextHour.setHours(currentHour.getHours() + 1);
     // Log preloading attempt
     console.info('Preloading data for next hour:', formatTime(nextHour));
+}
+
+// Add these utility functions near the top
+function setCookie(name, value, days = 365) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    const expires = `expires=${date.toUTCString()}`;
+    document.cookie = `${name}=${value};${expires};path=/`;
+}
+
+function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for(let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
+async function saveRegionPreference(region) {
+    // Primary storage: localStorage
+    try {
+        localStorage.setItem('selectedRegion', region);
+    } catch (e) {
+        console.warn('Could not save to localStorage:', e);
+    }
+    
+    // Backup storage: cookie
+    try {
+        setCookie('selectedRegion', region);
+    } catch (e) {
+        console.warn('Could not save to cookie:', e);
+    }
+
+    // PWA Service Worker storage
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        try {
+            // Create a message channel
+            const messageChannel = new MessageChannel();
+            
+            // Return a promise that resolves when the SW responds
+            const swResponse = new Promise((resolve) => {
+                messageChannel.port1.onmessage = (event) => {
+                    resolve(event.data.success);
+                };
+            });
+            
+            // Send the message to the SW
+            navigator.serviceWorker.controller.postMessage(
+                {
+                    type: 'SET_REGION',
+                    region: region
+                },
+                [messageChannel.port2]
+            );
+            
+            await swResponse;
+        } catch (e) {
+            console.warn('Could not save to Service Worker cache:', e);
+        }
+    }
+}
+
+async function getRegionPreference() {
+    // Try localStorage first
+    const regionFromLocal = localStorage.getItem('selectedRegion');
+    if (regionFromLocal && ['SE1', 'SE2', 'SE3', 'SE4'].includes(regionFromLocal)) {
+        return regionFromLocal;
+    }
+    
+    // Try cookie as backup
+    const regionFromCookie = getCookie('selectedRegion');
+    if (regionFromCookie && ['SE1', 'SE2', 'SE3', 'SE4'].includes(regionFromCookie)) {
+        return regionFromCookie;
+    }
+
+    // Try PWA Service Worker cache as final backup
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        try {
+            const cache = await caches.open('elpris-preferences-v1');
+            const response = await cache.match('preferences');
+            if (response) {
+                const preferences = await response.json();
+                if (preferences.region && ['SE1', 'SE2', 'SE3', 'SE4'].includes(preferences.region)) {
+                    return preferences.region;
+                }
+            }
+        } catch (e) {
+            console.warn('Could not read from Service Worker cache:', e);
+        }
+    }
+    
+    // Default to SE3 if no stored preference
+    return 'SE3';
 }
 
 initialize(); 

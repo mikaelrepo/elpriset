@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Elpriser Sverige</title>
 
+    <!-- Cache Control Meta Tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#2c3e50">
     <meta name="description" content="Real-time electricity prices for Sweden's regions">
@@ -80,21 +85,6 @@
                 <div id="loadingMessage" class="message">Laddar...</div>
                 <div id="errorMessage" class="message error hidden">Fel vid laddning av data</div>
                 <canvas id="priceChart"></canvas>
-            </div>
-
-            <div class="price-legend">
-                <div class="legend-item">
-                    <span class="dot low"></span>
-                    <span>Lågt pris</span>
-                </div>
-                <div class="legend-item">
-                    <span class="dot medium"></span>
-                    <span>Medel pris</span>
-                </div>
-                <div class="legend-item">
-                    <span class="dot high"></span>
-                    <span>Högt pris</span>
-                </div>
             </div>
 
             <div class="statistics">

@@ -89,29 +89,6 @@ h1 {
     display: none;
 }
 
-.price-legend {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin: 20px 0;
-}
-
-.legend-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-}
-
-.dot.low { background-color: var(--low-price); }
-.dot.medium { background-color: var(--medium-price); }
-.dot.high { background-color: var(--high-price); }
-
 .statistics {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -228,11 +205,6 @@ h1 {
 
     .statistics {
         grid-template-columns: 1fr;
-    }
-
-    .price-legend {
-        flex-direction: column;
-        align-items: center;
     }
 
     .hourly-prices {
