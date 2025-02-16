@@ -1,0 +1,10 @@
+Elpriser Sverige
+Copyright 2025 Elpriser Sverige
+
+This product includes software developed by Elpriser Sverige (https://elpriset.github.io).
+
+This software displays real-time electricity prices for Swedish electricity price areas (SE1, SE2, SE3, SE4) 
+and uses data from the public API provided by elprisetjustnu.se.
+
+The web application uses the following third-party software:
+- Chart.js (MIT License) - https://www.chartjs.org/ 
