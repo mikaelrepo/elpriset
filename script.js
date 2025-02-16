@@ -885,9 +885,25 @@ async function updatePrices() {
 }
 
 // Event Listeners
-elements.regionSelect.addEventListener('change', (e) => {
+elements.regionSelect.addEventListener('change', async (e) => {
     const newRegion = e.target.value;
-    saveRegionPreference(newRegion);
+    const regionInfo = document.getElementById('regionInfo');
+    const regionDescription = regionInfo.querySelector('.region-description');
+    
+    // Update region description
+    const descriptions = {
+        'SE1': 'Elområde 1 (SE1) omfattar Norrland och norra Sverige. Här finns mycket vattenkraft och vindkraft, vilket ofta resulterar i lägre elpriser. Området inkluderar städer som Luleå och Umeå.',
+        'SE2': 'Elområde 2 (SE2) täcker norra Mellansverige. Området har också god tillgång till vattenkraft och vindkraft. Större städer i området inkluderar Sundsvall.',
+        'SE3': 'Elområde 3 (SE3) är Sveriges största elområde och omfattar södra Mellansverige. Här finns storstäder som Stockholm och Göteborg, samt en blandning av kärnkraft och förnybar energi.',
+        'SE4': 'Elområde 4 (SE4) täcker södra Sverige med Malmö som största stad. Området har mindre egen elproduktion och är mer beroende av import, vilket kan leda till högre priser.'
+    };
+    
+    if (descriptions[newRegion]) {
+        regionDescription.textContent = descriptions[newRegion];
+        regionInfo.classList.remove('visually-hidden');
+    }
+    
+    await saveRegionPreference(newRegion);
     updatePrices();
 });
 

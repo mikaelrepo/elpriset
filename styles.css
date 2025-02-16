@@ -112,6 +112,35 @@ h1 {
     font-size: 0.9rem;
 }
 
+.region-info {
+    background: var(--surface-color);
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: var(--box-shadow);
+}
+
+.region-info:not(.visually-hidden) {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.region-description {
+    color: var(--text-color);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .chart-container {
     background: var(--surface-color);
     padding: 20px;
@@ -355,4 +384,17 @@ h1 {
 
 .theme-toggle:active {
     transform: translateY(0);
+}
+
+/* Accessibility and SEO */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 } 

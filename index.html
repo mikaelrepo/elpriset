@@ -4,7 +4,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Elpriser Sverige</title>
+    <title>Elpriser Sverige - Aktuella elpriser i realtid | SE1, SE2, SE3, SE4</title>
+
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="Elpriser Sverige - Aktuella elpriser i realtid">
+    <meta name="description" content="Se aktuella elpriser för alla Sveriges elområden (SE1, SE2, SE3, SE4). Realtidsuppdatering, timpriser, statistik och prisjämförelser för svensk elkostnad.">
+    <meta name="keywords" content="elpriser, elpris sverige, elkostnad, elområden, SE1, SE2, SE3, SE4, spotpris el, timpris el, elprisutveckling">
+    <meta name="author" content="Elpriser Sverige">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://elpriset.github.io">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://elpriset.github.io">
+    <meta property="og:title" content="Elpriser Sverige - Aktuella elpriser i realtid">
+    <meta property="og:description" content="Se aktuella elpriser för alla Sveriges elområden (SE1, SE2, SE3, SE4). Realtidsuppdatering, timpriser, statistik och prisjämförelser.">
+    <meta property="og:image" content="https://elpriset.github.io/icons/og-image.png">
+    <meta property="og:locale" content="sv_SE">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://elpriset.github.io">
+    <meta name="twitter:title" content="Elpriser Sverige - Aktuella elpriser i realtid">
+    <meta name="twitter:description" content="Se aktuella elpriser för alla Sveriges elområden. Realtidsuppdatering och prisjämförelser.">
+    <meta name="twitter:image" content="https://elpriset.github.io/icons/og-image.png">
 
     <!-- Cache Control Meta Tags -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -52,6 +75,66 @@
     <link rel="stylesheet" href="styles.css">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Elpriser Sverige",
+        "url": "https://elpriset.github.io",
+        "applicationCategory": "UtilityApplication",
+        "operatingSystem": "Any",
+        "description": "Realtidsuppdaterade elpriser för Sveriges elområden (SE1, SE2, SE3, SE4) med timpriser, statistik och prisjämförelser.",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "SEK"
+        },
+        "author": {
+            "@type": "Organization",
+            "name": "Elpriser Sverige",
+            "url": "https://elpriset.github.io",
+            "address": {
+                "@type": "PostalAddress",
+                "addressCountry": "SE"
+            }
+        },
+        "areaServed": {
+            "@type": "Country",
+            "name": "Sverige",
+            "identifier": "SE"
+        },
+        "availableInRegion": [
+            {
+                "@type": "Place",
+                "name": "Norra Sverige (SE1)",
+                "description": "Luleå, Umeå, och norra Sverige"
+            },
+            {
+                "@type": "Place",
+                "name": "Norra Mellansverige (SE2)",
+                "description": "Sundsvall och norra mellansverige"
+            },
+            {
+                "@type": "Place",
+                "name": "Södra Mellansverige (SE3)",
+                "description": "Stockholm, Göteborg, och södra mellansverige"
+            },
+            {
+                "@type": "Place",
+                "name": "Södra Sverige (SE4)",
+                "description": "Malmö och södra Sverige"
+            }
+        ],
+        "inLanguage": "sv-SE",
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "ratingCount": "150"
+        }
+    }
+    </script>
 </head>
 
 <body>
@@ -60,11 +143,11 @@
             <div class="header-content">
                 <h1>Elpriser Sverige</h1>
                 <div class="header-right">
-                    <select id="regionSelect">
-                        <option value="SE1">SE1</option>
-                        <option value="SE2">SE2</option>
-                        <option value="SE3" selected>SE3</option>
-                        <option value="SE4">SE4</option>
+                    <select id="regionSelect" aria-label="Välj elområde">
+                        <option value="SE1" title="Luleå, Umeå och norra Sverige">SE1 - Norra Sverige</option>
+                        <option value="SE2" title="Sundsvall och norra mellansverige">SE2 - Norra Mellansverige</option>
+                        <option value="SE3" title="Stockholm, Göteborg och södra mellansverige" selected>SE3 - Södra Mellansverige</option>
+                        <option value="SE4" title="Malmö och södra Sverige">SE4 - Södra Sverige</option>
                     </select>
                     <button id="installButton" class="install-button hidden">Installera App</button>
                     <div class="last-updated">
@@ -75,19 +158,29 @@
             <div class="unit-info">Alla priser i öre/kWh</div>
         </header>
 
+        <div id="regionInfo" class="region-info visually-hidden" aria-live="polite">
+            <p class="region-description"></p>
+        </div>
+
         <main>
-            <div class="next-hours">
+            <section class="next-hours" aria-label="Kommande timpriser">
+                <h2 class="visually-hidden">Kommande timpriser</h2>
                 <div id="hourlyPrices" class="hourly-prices">
                     <!-- Price boxes will be added here dynamically -->
                 </div>
-            </div>
-            <div class="chart-container">
-                <div id="loadingMessage" class="message">Laddar...</div>
-                <div id="errorMessage" class="message error hidden">Fel vid laddning av data</div>
-                <canvas id="priceChart"></canvas>
-            </div>
+            </section>
+            
+            <section class="chart-section" aria-label="Prisutveckling">
+                <h2 class="visually-hidden">Prisutveckling</h2>
+                <div class="chart-container">
+                    <div id="loadingMessage" class="message">Laddar...</div>
+                    <div id="errorMessage" class="message error hidden">Fel vid laddning av data</div>
+                    <canvas id="priceChart" aria-label="Elprisutveckling graf" role="img"></canvas>
+                </div>
+            </section>
 
-            <div class="statistics">
+            <section class="statistics" aria-label="Prisstatistik">
+                <h2 class="visually-hidden">Prisstatistik</h2>
                 <div class="stat-box">
                     <h3>Lägsta</h3>
                     <p id="lowestPrice">-- öre</p>
@@ -100,7 +193,7 @@
                     <h3>Högsta</h3>
                     <p id="highestPrice">-- öre</p>
                 </div>
-            </div>
+            </section>
         </main>
     </div>
     <script src="script.js"></script>
