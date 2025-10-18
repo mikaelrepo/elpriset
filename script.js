@@ -16,7 +16,7 @@
 
 // Constants and configurations
 const UPDATE_INTERVAL = 10 * 60 * 1000; // 10 minutes
-const API_BASE_URL = 'https://elprisetjustnu.se/api/v1/prices';
+const API_BASE_URL = 'https://www.elprisetjustnu.se/api/v1/prices';
 const FALLBACK_PROXIES = [
     'https://api.allorigins.win/raw?url=',
     'https://corsproxy.io/?'
@@ -32,7 +32,7 @@ async function saveThemePreference(theme) {
     } catch (e) {
         console.warn('Could not save theme to localStorage:', e);
     }
-    
+
     // Backup storage: cookie
     try {
         setCookie(THEME_KEY, theme);
@@ -49,7 +49,7 @@ async function saveThemePreference(theme) {
                     resolve(event.data.success);
                 };
             });
-            
+
             navigator.serviceWorker.controller.postMessage(
                 {
                     type: 'SET_THEME',
@@ -57,7 +57,7 @@ async function saveThemePreference(theme) {
                 },
                 [messageChannel.port2]
             );
-            
+
             await swResponse;
         } catch (e) {
             console.warn('Could not save theme to Service Worker cache:', e);
@@ -71,7 +71,7 @@ async function getThemePreference() {
     if (themeFromLocal && ['light', 'dark'].includes(themeFromLocal)) {
         return themeFromLocal;
     }
-    
+
     // Try cookie as backup
     const themeFromCookie = getCookie(THEME_KEY);
     if (themeFromCookie && ['light', 'dark'].includes(themeFromCookie)) {
@@ -93,7 +93,7 @@ async function getThemePreference() {
             console.warn('Could not read theme from Service Worker cache:', e);
         }
     }
-    
+
     // If no stored preference, return null to use system preference
     return null;
 }
@@ -103,14 +103,14 @@ async function updateTheme(isDark) {
     const theme = isDark ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', theme);
     await saveThemePreference(theme);
-    
+
     // Update theme toggle button
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
         themeToggle.innerHTML = isDark ? '☀️' : '🌙';
         themeToggle.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
     }
-    
+
     // Update chart if it exists
     if (chart) {
         updatePrices();
@@ -139,17 +139,17 @@ function createThemeToggle() {
     themeToggle.id = 'themeToggle';
     themeToggle.className = 'theme-toggle';
     themeToggle.setAttribute('aria-label', 'Toggle theme');
-    
+
     isDarkMode().then(isDark => {
         themeToggle.innerHTML = isDark ? '☀️' : '🌙';
         themeToggle.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
     });
-    
+
     themeToggle.addEventListener('click', async () => {
         const newTheme = !(await isDarkMode());
         await updateTheme(newTheme);
     });
-    
+
     // Insert before the install button if it exists
     const installButton = headerRight.querySelector('.install-button');
     if (installButton) {
@@ -209,7 +209,7 @@ const CHART_OPTIONS = {
             },
             displayColors: false,
             callbacks: {
-                label: function(context) {
+                label: function (context) {
                     return `${context.parsed.y.toFixed(2)} öre/kWh`;
                 }
             },
@@ -238,7 +238,7 @@ const CHART_OPTIONS = {
                     weight: '500'
                 },
                 maxTicksLimit: 8,
-                callback: function(value, index, values) {
+                callback: function (value, index, values) {
                     if (window.innerWidth < 768) {
                         return index % 2 === 0 ? this.getLabelForValue(value) : '';
                     }
@@ -332,8 +332,8 @@ const cacheStats = {
             hits: this.hits,
             misses: this.misses,
             totalRequests: this.hits + this.misses,
-            timeSinceCleared: this.lastCleared ? 
-                `${Math.round((new Date() - this.lastCleared) / 1000)}s` : 
+            timeSinceCleared: this.lastCleared ?
+                `${Math.round((new Date() - this.lastCleared) / 1000)}s` :
                 'never'
         });
     }
@@ -376,7 +376,7 @@ function validatePriceData(data) {
         return false;
     }
     return data.every(item => (
-        item.time_start && 
+        item.time_start &&
         typeof item.SEK_per_kWh === 'number' &&
         !isNaN(item.SEK_per_kWh)
     ));
@@ -653,14 +653,14 @@ function processData(data) {
         console.info('Using current hour prices');
         let nextEightHours = sortedData.slice(currentIndex, currentIndex + 8);
         let nextSixteenHours = sortedData.slice(currentIndex, currentIndex + 16);
-        
+
         // Enhanced midnight transition handling
         if (isNearMidnight) {
             // Calculate how many hours we need from tomorrow
             const hoursUntilMidnight = 24 - currentHour;
             const neededTomorrowHours = 8 - hoursUntilMidnight;
             const neededTomorrowHoursChart = 16 - hoursUntilMidnight;
-            
+
             if (neededTomorrowHours > 0) {
                 const tomorrowHours = sortedData.filter(item => item.timestamp >= tomorrowStart);
                 if (tomorrowHours.length > 0) {
@@ -674,7 +674,7 @@ function processData(data) {
                             ...tomorrowHours.slice(0, neededTomorrowHours)
                         ];
                     }
-                    
+
                     // Handle 16-hour view for chart
                     if (nextSixteenHours.length < 16) {
                         const remainingHours = 16 - nextSixteenHours.length;
@@ -688,20 +688,20 @@ function processData(data) {
                 }
             }
         }
-        
+
         if (nextEightHours.length < 8) {
             console.warn(`Could only get ${nextEightHours.length} hours of price data for boxes`);
         }
         if (nextSixteenHours.length < 16) {
             console.warn(`Could only get ${nextSixteenHours.length} hours of price data for chart`);
         }
-        
+
         preloadNextHourData(currentHourStart);
         return processHourlyData(nextEightHours, nextSixteenHours);
     }
 
     // Look for next available hour, including tomorrow's hours
-    const nextIndex = sortedData.findIndex(item => 
+    const nextIndex = sortedData.findIndex(item =>
         item.timestamp >= nextHourTimestamp
     );
 
@@ -713,7 +713,7 @@ function processData(data) {
     }
 
     // If no future hours, find the most recent past hour
-    const lastIndex = sortedData.findIndex(item => 
+    const lastIndex = sortedData.findIndex(item =>
         item.timestamp < currentTimestamp
     );
 
@@ -730,8 +730,8 @@ function processData(data) {
 
 function processHourlyData(hours, chartHours = hours) {
     // Validate cache integrity
-    const hasValidCache = hours.every(item => 
-        typeof item.parsedPrice === 'number' && 
+    const hasValidCache = hours.every(item =>
+        typeof item.parsedPrice === 'number' &&
         typeof item.timestamp === 'number'
     );
 
@@ -755,14 +755,14 @@ function processHourlyData(hours, chartHours = hours) {
 
     // Use chart hours for statistics to include all visible prices
     const prices = chartHours.map(item => item.parsedPrice);
-    
+
     const stats = {
         lowest: Math.min(...prices),
         highest: Math.max(...prices),
         average: (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2)
     };
 
-    const colors = chartHours.map(price => 
+    const colors = chartHours.map(price =>
         memoizedGetPriceCategory(price, stats.lowest, stats.highest)
     );
 
@@ -776,7 +776,7 @@ function processHourlyData(hours, chartHours = hours) {
 
 function updateChart(times, prices, colors) {
     const ctx = elements.priceChart.getContext('2d');
-    
+
     if (chart) {
         chart.destroy();
     }
@@ -821,10 +821,10 @@ function updateChart(times, prices, colors) {
                         const ctx = chart.ctx;
                         const yAxis = chart.scales.y;
                         const chartArea = chart.chartArea;
-                        
+
                         // Zone colors with adjusted opacity for dark mode
                         const zoneOpacity = isDarkMode() ? 0.15 : 0.1;
-                        
+
                         // Low price zone (green)
                         ctx.fillStyle = `rgba(46, 204, 113, ${zoneOpacity})`;
                         ctx.fillRect(
@@ -833,7 +833,7 @@ function updateChart(times, prices, colors) {
                             chartArea.right - chartArea.left,
                             yAxis.getPixelForValue(minPrice) - yAxis.getPixelForValue(minPrice + range * 0.66)
                         );
-                        
+
                         // Medium price zone (yellow)
                         ctx.fillStyle = `rgba(241, 196, 15, ${zoneOpacity})`;
                         ctx.fillRect(
@@ -842,7 +842,7 @@ function updateChart(times, prices, colors) {
                             chartArea.right - chartArea.left,
                             yAxis.getPixelForValue(minPrice + range * 0.66) - yAxis.getPixelForValue(minPrice + range * 0.33)
                         );
-                        
+
                         // High price zone (red)
                         ctx.fillStyle = `rgba(231, 76, 60, ${zoneOpacity})`;
                         ctx.fillRect(
@@ -905,7 +905,7 @@ elements.regionSelect.addEventListener('change', async (e) => {
     const newRegion = e.target.value;
     const regionInfo = document.getElementById('regionInfo');
     const regionDescription = regionInfo.querySelector('.region-description');
-    
+
     // Update region description
     const descriptions = {
         'SE1': 'Elområde 1 (SE1) omfattar Norrland och norra Sverige. Här finns mycket vattenkraft och vindkraft, vilket ofta resulterar i lägre elpriser. Området inkluderar städer som Luleå och Umeå.',
@@ -913,12 +913,12 @@ elements.regionSelect.addEventListener('change', async (e) => {
         'SE3': 'Elområde 3 (SE3) är Sveriges största elområde och omfattar södra Mellansverige. Här finns storstäder som Stockholm och Göteborg, samt en blandning av kärnkraft och förnybar energi.',
         'SE4': 'Elområde 4 (SE4) täcker södra Sverige med Malmö som största stad. Området har mindre egen elproduktion och är mer beroende av import, vilket kan leda till högre priser.'
     };
-    
+
     if (descriptions[newRegion]) {
         regionDescription.textContent = descriptions[newRegion];
         regionInfo.classList.remove('visually-hidden');
     }
-    
+
     await saveRegionPreference(newRegion);
     updatePrices();
 });
@@ -943,7 +943,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     // Stash the event so it can be triggered later
     deferredPrompt = e;
-    
+
     // Only show install button if PWA is not already installed
     if (!isPWAInstalled()) {
         elements.installButton.classList.remove('hidden');
@@ -963,7 +963,7 @@ elements.installButton.addEventListener('click', async () => {
         // Show the installation prompt
         const result = await deferredPrompt.prompt();
         console.log('Install prompt result:', result);
-        
+
         // Wait for the user to respond to the prompt
         const choiceResult = await deferredPrompt.userChoice;
         if (choiceResult.outcome === 'accepted') {
@@ -987,13 +987,13 @@ window.addEventListener('appinstalled', (event) => {
     localStorage.setItem(PWA_INSTALLED_KEY, 'true');
     elements.installButton.classList.add('hidden');
     deferredPrompt = null;
-    
+
     // Optionally show a success message
     const successMessage = document.createElement('div');
     successMessage.className = 'install-success-message';
     successMessage.textContent = 'App installerad framgångsrikt!';
     document.body.appendChild(successMessage);
-    
+
     // Remove success message after 3 seconds
     setTimeout(() => {
         successMessage.remove();
@@ -1062,7 +1062,7 @@ function setCookie(name, value, days = 365) {
 function getCookie(name) {
     const nameEQ = name + "=";
     const ca = document.cookie.split(';');
-    for(let i = 0; i < ca.length; i++) {
+    for (let i = 0; i < ca.length; i++) {
         let c = ca[i];
         while (c.charAt(0) === ' ') c = c.substring(1, c.length);
         if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
@@ -1077,7 +1077,7 @@ async function saveRegionPreference(region) {
     } catch (e) {
         console.warn('Could not save to localStorage:', e);
     }
-    
+
     // Backup storage: cookie
     try {
         setCookie('selectedRegion', region);
@@ -1090,14 +1090,14 @@ async function saveRegionPreference(region) {
         try {
             // Create a message channel
             const messageChannel = new MessageChannel();
-            
+
             // Return a promise that resolves when the SW responds
             const swResponse = new Promise((resolve) => {
                 messageChannel.port1.onmessage = (event) => {
                     resolve(event.data.success);
                 };
             });
-            
+
             // Send the message to the SW
             navigator.serviceWorker.controller.postMessage(
                 {
@@ -1106,7 +1106,7 @@ async function saveRegionPreference(region) {
                 },
                 [messageChannel.port2]
             );
-            
+
             await swResponse;
         } catch (e) {
             console.warn('Could not save to Service Worker cache:', e);
@@ -1120,7 +1120,7 @@ async function getRegionPreference() {
     if (regionFromLocal && ['SE1', 'SE2', 'SE3', 'SE4'].includes(regionFromLocal)) {
         return regionFromLocal;
     }
-    
+
     // Try cookie as backup
     const regionFromCookie = getCookie('selectedRegion');
     if (regionFromCookie && ['SE1', 'SE2', 'SE3', 'SE4'].includes(regionFromCookie)) {
@@ -1142,7 +1142,7 @@ async function getRegionPreference() {
             console.warn('Could not read from Service Worker cache:', e);
         }
     }
-    
+
     // Default to SE3 if no stored preference
     return 'SE3';
 }
