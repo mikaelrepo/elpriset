@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "Electricity price PWA for Sweden",
   "scripts": {
-    "generate-icons": "node generate-icons.js"
+    "generate-icons": "node generate-icons.js",
+    "update-version": "node update-version.js",
+    "prebuild": "node update-version.js",
+    "prestart": "node update-version.js"
   },
   "dependencies": {
     "sharp": "^0.32.6"
