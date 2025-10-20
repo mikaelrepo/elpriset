@@ -15,7 +15,7 @@
  */
 
 // Constants and configurations
-const UPDATE_INTERVAL = 60 * 60 * 1000; // 1 hour
+const UPDATE_INTERVAL = 10 * 60 * 1000; // 10 minutes
 const API_BASE_URL = 'https://www.elprisetjustnu.se/api/v1/prices';
 const FALLBACK_PROXIES = [
     'https://api.allorigins.win/raw?url=',
@@ -382,6 +382,15 @@ function validatePriceData(data) {
     ));
 }
 
+// Filter to get only hourly prices (at the start of each hour)
+function filterHourlyPrices(data) {
+    return data.filter(item => {
+        const date = new Date(item.time_start);
+        // Check if minutes and seconds are 0 (start of hour)
+        return date.getMinutes() === 0 && date.getSeconds() === 0;
+    });
+}
+
 // Helper Functions
 function formatTime(isoString) {
     return new Date(isoString).toLocaleTimeString('sv-SE', {
@@ -528,7 +537,15 @@ async function fetchPrices(region = 'SE3') {
             throw new Error('Kunde inte hämta prisdata för varken idag eller imorgon');
         }
 
-        return combinedData;
+        // Filter to get only hourly prices
+        const hourlyData = filterHourlyPrices(combinedData);
+        if (hourlyData.length > 0) {
+            console.info(`Filtered ${combinedData.length} prices to ${hourlyData.length} hourly prices`);
+            return hourlyData;
+        } else {
+            console.warn('No hourly prices found, returning all data');
+            return combinedData;
+        }
     } catch (error) {
         console.error('Fetch error:', error);
         throw error;
