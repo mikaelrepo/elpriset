@@ -3,7 +3,7 @@
 A real-time electricity price tracking Progressive Web Application (PWA) that displays hourly electricity prices for different regions in Sweden. The application shows current and upcoming prices, price statistics, and visual representations of price trends.
 
 ![Electricity Price Tracker - Light Theme](screenshots/app-light.png)
-![Electricity Price Tracker - Dark Theme](screenshots/app-dark.png)
+![Electricity Price Tracker - Dark Theme](screenshots/app-dark.png) 
 
 ## Features
 
