@@ -15,7 +15,7 @@
  */
 
 // Constants and configurations
-const UPDATE_INTERVAL = 10 * 60 * 1000; // 10 minutes
+const UPDATE_INTERVAL = 60 * 60 * 1000; // 1 hour
 const API_BASE_URL = 'https://www.elprisetjustnu.se/api/v1/prices';
 const FALLBACK_PROXIES = [
     'https://api.allorigins.win/raw?url=',
