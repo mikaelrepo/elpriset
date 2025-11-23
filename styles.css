@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-:root, :root[data-theme="light"] {
+:root,
+:root[data-theme="light"] {
     /* Light theme variables */
     --primary-color: #2c3e50;
     --low-price: #2ecc71;
@@ -43,7 +44,7 @@
     --chart-grid-color: rgba(255, 255, 255, 0.05);
     --tooltip-bg: rgba(44, 62, 80, 0.95);
     --button-hover: #3d566e;
-    
+
     /* Adjust price colors for better visibility in dark mode */
     --low-price: #00d68f;
     --medium-price: #ffd93d;
@@ -63,7 +64,7 @@
         --chart-grid-color: rgba(255, 255, 255, 0.05);
         --tooltip-bg: rgba(44, 62, 80, 0.95);
         --button-hover: #3d566e;
-        
+
         /* Adjust price colors for better visibility in dark mode */
         --low-price: #00d68f;
         --medium-price: #ffd93d;
@@ -151,6 +152,7 @@ h1 {
         opacity: 0;
         transform: translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -216,19 +218,39 @@ h1 {
 }
 
 .hourly-prices {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    display: flex;
+    overflow-x: auto;
     gap: 10px;
-    padding: 0 10px;
+    padding: 10px;
+    scroll-behavior: smooth;
+}
+
+.hourly-prices::-webkit-scrollbar {
+    height: 6px;
+}
+
+.hourly-prices::-webkit-scrollbar-track {
+    background: var(--background-color);
+}
+
+.hourly-prices::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.hourly-prices::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
 }
 
 .price-box {
     background: var(--surface-color);
     border-radius: 8px;
-    padding: 12px;
+    padding: 8px 6px;
     text-align: center;
     box-shadow: var(--box-shadow);
     transition: transform 0.2s;
+    flex: 0 0 calc(100% / 12);
+    min-width: 55px;
 }
 
 .price-box:hover {
@@ -248,13 +270,13 @@ h1 {
 }
 
 .price-box .time {
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
 .price-box .price {
-    font-size: 1.2rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--text-color);
 }
@@ -299,6 +321,7 @@ h1 {
         transform: translate(-50%, -20px);
         opacity: 0;
     }
+
     to {
         transform: translate(-50%, 0);
         opacity: 1;
@@ -309,6 +332,7 @@ h1 {
     from {
         opacity: 1;
     }
+
     to {
         opacity: 0;
     }
@@ -341,20 +365,21 @@ h1 {
     }
 
     .hourly-prices {
-        grid-template-columns: repeat(4, 1fr);
         gap: 8px;
     }
-    
+
     .price-box {
-        padding: 8px;
+        flex: 0 0 calc(100% / 8);
+        min-width: 50px;
+        padding: 6px 4px;
     }
-    
+
     .price-box .time {
-        font-size: 0.8rem;
+        font-size: 0.7rem;
     }
-    
+
     .price-box .price {
-        font-size: 1rem;
+        font-size: 0.85rem;
     }
 }
 
@@ -372,7 +397,13 @@ h1 {
     }
 
     .hourly-prices {
-        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+    }
+
+    .price-box {
+        flex: 0 0 calc(100% / 6);
+        min-width: 45px;
+        padding: 6px 4px;
     }
 }
 
@@ -413,4 +444,4 @@ h1 {
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
-} 
+}

@@ -579,8 +579,8 @@ function updateHourlyPrices(data) {
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
 
-    // Get the next 8 hours of prices
-    const nextHours = data.slice(0, 8);
+    // Get the next 12 hours of prices
+    const nextHours = data.slice(0, 12);
 
     nextHours.forEach((hourData, index) => {
         const price = prices[index];
@@ -668,8 +668,8 @@ function processData(data) {
 
     if (currentIndex >= 0) {
         console.info('Using current hour prices');
-        let nextEightHours = sortedData.slice(currentIndex, currentIndex + 8);
-        let nextSixteenHours = sortedData.slice(currentIndex, currentIndex + 16);
+        let nextEightHours = sortedData.slice(currentIndex, currentIndex + 12);
+        let nextSixteenHours = sortedData.slice(currentIndex, currentIndex + 24);
 
         // Enhanced midnight transition handling
         if (isNearMidnight) {

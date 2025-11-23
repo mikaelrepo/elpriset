@@ -1,0 +1,48 @@
+# Systemd service file for Elpriser Sverige PWA
+# Place this file at: /etc/systemd/system/elpriset.service
+# 
+# Usage:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable elpriset.service
+#   sudo systemctl start elpriset.service
+#   sudo systemctl status elpriset.service
+
+[Unit]
+Description=Elpriser Sverige - Real-time Electricity Price Tracker PWA
+Documentation=https://github.com/elpriset/elpriset.github.io
+After=network.target nginx.service
+Wants=nginx.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/true
+RemainAfterExit=yes
+
+# User and group
+User=www-data
+Group=www-data
+
+# Working directory
+WorkingDirectory=/var/www/elpriset
+
+# Environment variables (optional)
+Environment="NODE_ENV=production"
+
+# Security settings
+PrivateTmp=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/www/elpriset
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=elpriset
+
+# Restart policy
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

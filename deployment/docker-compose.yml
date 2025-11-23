@@ -1,0 +1,72 @@
+# Docker Compose configuration for Elpriser Sverige PWA
+# Usage:
+#   docker-compose up -d          # Start services
+#   docker-compose down           # Stop services
+#   docker-compose logs -f        # View logs
+#   docker-compose ps             # Check status
+
+version: '3.8'
+
+services:
+  elpriset:
+    # Build from Dockerfile in deployment directory
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    
+    # Container name
+    container_name: elpriset
+    
+    # Image name and tag
+    image: elpriset:latest
+    
+    # Port mapping
+    ports:
+      - "80:80"
+      # Uncomment for HTTPS (requires SSL certificates)
+      # - "443:443"
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Environment variables
+    environment:
+      - TZ=UTC
+    
+    # Volumes (optional - for SSL certificates)
+    # volumes:
+    #   - /etc/letsencrypt:/etc/letsencrypt:ro
+    #   - ./deployment/nginx-ssl.conf:/etc/nginx/conf.d/default.conf:ro
+    
+    # Network
+    networks:
+      - elpriset-network
+
+networks:
+  elpriset-network:
+    driver: bridge
